@@ -40,6 +40,23 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
+# Create a script file sourced by both interactive and non-interactive bash shells
+ENV BASH_ENV=/root/.bash_env
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# hadolint ignore=SC2016
+RUN touch "${BASH_ENV}" && \
+    echo '. "${BASH_ENV}"' >> ~/.bashrc
+
+# Download and install nvm
+ENV NVM_VERSION=v0.40.1
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash && \
+    echo node > .nvmrc
+
+SHELL ["/bin/bash", "-c"]
+RUN nvm install --lts --default --save && \
+    nvm install-latest-npm
+
 # Copy application code
 COPY . .
 
@@ -48,9 +65,8 @@ RUN bundle exec bootsnap precompile app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 # hadolint ignore=DL3059
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-
-
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
+    rm -rf node_modules
 
 
 # Final stage for app image
@@ -60,11 +76,12 @@ FROM base
 COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
-# Run and own only the runtime files as a non-root user for security
-RUN groupadd --system --gid 1000 rails && \
-    useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
+ARG GID=10001
+ARG UID=10001
+RUN groupadd --system --gid "${GID}" rails && \
+    useradd rails --create-home --shell /bin/bash --uid "${UID}" --gid "${GID}" && \
     chown -R rails:rails db log storage tmp
-USER 1000:1000
+USER rails:rails
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]

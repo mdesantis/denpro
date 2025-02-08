@@ -83,7 +83,17 @@ production:
     <<: *default
     database: denpro_production
     username: denpro
-    password: <%= ENV["denpro_DATABASE_PASSWORD"] %>
+    # <% if ENV['DENPRO_DATABASE_HOST'] %>
+    host: <%= ENV['DENPRO_DATABASE_HOST'] %>
+    # <% end %>
+    # <% if ENV['DENPRO_DATABASE_PORT'] %>
+    port: <%= ENV['DENPRO_DATABASE_PORT'] %>
+    # <% end %>
+    # <% if ENV["DENPRO_DATABASE_PASSWORD_FILE"] %>
+    password: <%= File.read(ENV["DENPRO_DATABASE_PASSWORD_FILE"]).chomp %>
+    # <% else %>
+    password: <%= ENV["DENPRO_DATABASE_PASSWORD"] %>
+    # <% end %>
   cache:
     <<: *primary_production
     database: denpro_production_cache

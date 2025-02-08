@@ -3,6 +3,9 @@ require 'active_support/core_ext/integer/time'
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
+  # Enable Docker to set its secrets file.
+  config.credentials.key_path = ENV['RAILS_CREDENTIALS_KEY_FILE'] if ENV['RAILS_CREDENTIALS_KEY_FILE']
+
   # Code is not reloaded between requests.
   config.enable_reloading = false
 

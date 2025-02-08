@@ -1,0 +1,53 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+services:
+  rls:
+    build: .
+    depends_on:
+      pgq:
+        condition: service_healthy
+    secrets:
+      - pgq-password
+      - rls-credentials
+    environment:
+      - DENPRO_DATABASE_HOST=pgq
+      - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgq-password
+      - RAILS_DO_NOT_FORCE_SSL=true
+      - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls-credentials
+    command: ["./bin/rails", "server"]
+    ports:
+      - 3000:3000
+    expose:
+      - 3000
+    healthcheck:
+      test: ["CMD", "curl", "--request", "HEAD", "--silent", "--fail", "http://localhost:3000/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  pgq:
+    image: postgres
+    restart: always
+    user: postgres
+    secrets:
+      - pgq-password
+    volumes:
+      - pgq-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=denpro
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq-password
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+volumes:
+  pgq-data:
+secrets:
+  pgq-password:
+    file: .compose/secrets/pgq-password.txt
+  rls-credentials:
+    file: config/credentials/production.key

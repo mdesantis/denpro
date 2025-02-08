@@ -20,6 +20,9 @@
 !/log/.keep
 !/tmp/.keep
 
+# Ignore test files.
+/test
+
 # Ignore pidfiles, but keep the directory.
 /tmp/pids/*
 !/tmp/pids/.keep
@@ -45,6 +48,10 @@
 
 # Ignore development files
 /.devcontainer
+
+# Ignore Docker compose-related files
+/compose.yml
+/.compose
 
 # Ignore Docker-related files
 /.dockerignore
