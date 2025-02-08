@@ -12,7 +12,7 @@ services:
       # - 443:443/udp
     volumes:
       - ./.compose/volumes/cdy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./public:/srv
+      - rls-public:/srv:ro
       - cdy_data:/data
       - cdy_config:/config
   pgq:
@@ -56,10 +56,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    volumes:
+      - rls-public:/rails/public
 volumes:
   cdy_data:
   cdy_config:
   pgq-data:
+  rls-public:
 secrets:
   pgq-password:
     file: .compose/secrets/pgq-password.txt
