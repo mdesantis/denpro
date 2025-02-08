@@ -3,6 +3,20 @@
 # https://docs.docker.com/go/compose-spec-reference/
 
 services:
+  cdy:
+    image: caddy
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+      # - 443:443
+      # - 443:443/udp
+    expose:
+      - 8080
+    volumes:
+      - ./.compose/volumes/cdy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./public:/srv
+      - cdy_data:/data
+      - cdy_config:/config
   pgq:
     image: postgres
     restart: always
@@ -45,6 +59,8 @@ services:
       timeout: 5s
       retries: 3
 volumes:
+  cdy_data:
+  cdy_config:
   pgq-data:
 secrets:
   pgq-password:

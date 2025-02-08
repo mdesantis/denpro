@@ -1,0 +1,17 @@
+{
+	auto_https off
+	http_port 8080
+
+	# log {
+	# 	level debug
+	# }
+
+	# servers {
+	# 	protocols h1 h2
+	# }
+}
+
+http://localhost, http://localhost.localdomain {
+	root * /srv
+	file_server
+}
