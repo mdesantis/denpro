@@ -14,5 +14,6 @@ Rails.application.routes.draw do
 
   constraints subdomain: 'demos' do
     get '/', to: 'demos#index'
+    get '/sendfile', to: 'demos#sendfile_demo', as: :sendfile_demo
   end
 end

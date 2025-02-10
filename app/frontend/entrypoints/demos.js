@@ -28,3 +28,4 @@ console.log('Visit the guide for more information: ', 'https://vite-ruby.netlify
 // import '~/index.css'
 
 console.log('test')
+console.log('another test')

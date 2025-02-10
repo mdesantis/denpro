@@ -9,7 +9,7 @@
 }
 
 http://*.localhost, http://*.localhost.localdomain {
-	root * /srv
+	root * /srv/public
 	file_server
 	encode zstd gzip
 
@@ -23,5 +23,34 @@ http://*.localhost, http://*.localhost.localdomain {
 
 	header @static Cache-Control "public, max-age=31536000"
 
-	reverse_proxy @notStatic rls:3000
+	reverse_proxy @notStatic rls:3000 {
+		@sendfile header X-Sendfile *
+
+		#handle_response @sendfile {
+		#root * /srv/private
+		#rewrite {http.response.header.X-Sendfile}
+		#file_server
+		#}
+		handle_response @sendfile {
+			#rewrite {http.response.header.X-Sendfile}
+			#copy_response
+
+			root * /srv/private
+
+			#header X-Sendfile /rails/storage ""
+			rewrite /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
+
+			file_server
+
+			#copy_response_headers
+			#respond "test"
+		}
+	}
+
+	# @accel header X-Accel-Redirect *
+	# handle_response @accel {
+	# 	root * /path/to/private/files
+	# 	rewrite {http.response.header.X-Accel-Redirect}
+	# 	file_server
+	# }
 }

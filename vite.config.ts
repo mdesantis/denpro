@@ -6,8 +6,6 @@ export default defineConfig({
     RubyPlugin(),
   ],
   server: {
-    allowedHosts: [
-      '.localhost.localdomain'
-    ]
+    allowedHosts: ['.localhost.localdomain']
   }
 })

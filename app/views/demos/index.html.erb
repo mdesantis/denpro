@@ -1,1 +1,8 @@
 <h1>demos#index</h1>
+
+<ul>
+  <li>
+    <% blob = ActiveStorage::Blob.first! %>
+    <%= link_to blob.filename, blob %>
+  </li>
+</ul>
