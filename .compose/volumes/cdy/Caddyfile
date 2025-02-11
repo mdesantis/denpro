@@ -8,49 +8,72 @@
 	}
 }
 
-http://*.localhost, http://*.localhost.localdomain {
+http://localhost, http://localhost.localdomain, http://*.localhost, http://*.localhost.localdomain {
 	root * /srv/public
 	file_server
 	encode zstd gzip
 
-	@static {
-		file
-	}
+	@static file
 
-	@notStatic {
-		not file
-	}
+	@notStatic not file
 
 	header @static Cache-Control "public, max-age=31536000"
 
 	reverse_proxy @notStatic rls:3000 {
-		@sendfile header X-Sendfile *
+		@400 status 400
 
-		#handle_response @sendfile {
-		#root * /srv/private
-		#rewrite {http.response.header.X-Sendfile}
-		#file_server
-		#}
-		handle_response @sendfile {
-			#rewrite {http.response.header.X-Sendfile}
-			#copy_response
-
-			root * /srv/private
-
-			#header X-Sendfile /rails/storage ""
-			rewrite /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
-
-			file_server
-
-			#copy_response_headers
-			#respond "test"
+		handle_response @400 {
+			rewrite * /400.html
 		}
+		replace_status @400 400
+
+		@404 status 404
+
+		handle_response @404 {
+			rewrite * /404.html
+		}
+		replace_status @404 404
+
+		@422 status 422
+
+		handle_response @422 {
+			rewrite * /422.html
+		}
+		replace_status @422 422
+
+		@500 status 500
+
+		handle_response @500 {
+			rewrite * /500.html
+		}
+		replace_status @500 500
 	}
 
-	# @accel header X-Accel-Redirect *
-	# handle_response @accel {
-	# 	root * /path/to/private/files
-	# 	rewrite {http.response.header.X-Accel-Redirect}
-	# 	file_server
-	# }
+	#handle_response @sendfile {
+	#root * /srv/private
+	#rewrite {http.response.header.X-Sendfile}
+	#file_server
+	#}
+	#handle_response @sendfile {
+	#rewrite {http.response.header.X-Sendfile}
+	#copy_response
+
+	#root * /srv/private
+
+	#header X-Sendfile /rails/storage ""
+	# rewrite /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
+
+	#file_server
+
+	#copy_response_headers
+	#respond "test"
+	#}
 }
+
+# @accel header X-Accel-Redirect *
+# handle_response @accel {
+# 	root * /path/to/private/files
+# 	rewrite {http.response.header.X-Accel-Redirect}
+# 	file_server
+# }
+# }
