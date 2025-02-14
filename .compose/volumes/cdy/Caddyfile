@@ -21,12 +21,12 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	reverse_proxy @notStatic rls:3000 {
 		@err status 400 404 422 500
 
-		handle_response {
+		handle_response @err {
 			error "" {rp.status_code}
 		}
 	}
 
-	handle_errors {
+	handle_errors 400 404 422 500 {
 		root * /srv/public
 		rewrite * /{err.status_code}.html
 		file_server

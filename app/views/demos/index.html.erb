@@ -2,7 +2,7 @@
 
 <ul>
   <li>
-    <% blob = ActiveStorage::Blob.first! %>
+    <% blob = ActiveStorage::Blob.first || ActiveStorage::Blob.create_and_upload!(filename: 'hello.txt', io: StringIO.new('Hello world!')) %>
     <%= link_to blob.filename, blob %>
   </li>
 </ul>
