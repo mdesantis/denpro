@@ -3,6 +3,24 @@
 # https://docs.docker.com/go/compose-spec-reference/
 
 services:
+  pgq:
+    image: postgres
+    restart: always
+    user: postgres
+    secrets:
+      - pgq-password
+    volumes:
+      - pgq-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=denpro
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq-password
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready", "--username", "denpro"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
   rls:
     build: .
     depends_on:
@@ -23,24 +41,6 @@ services:
       - 3000
     healthcheck:
       test: ["CMD", "curl", "--request", "HEAD", "--silent", "--fail", "http://localhost:3000/up"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-  pgq:
-    image: postgres
-    restart: always
-    user: postgres
-    secrets:
-      - pgq-password
-    volumes:
-      - pgq-data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_USER=denpro
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq-password
-    expose:
-      - 5432
-    healthcheck:
-      test: ["CMD", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 3
