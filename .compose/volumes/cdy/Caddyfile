@@ -27,7 +27,9 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	}
 
 	handle_errors {
+		root * /srv/public
 		rewrite * /{err.status_code}.html
+		file_server
 	}
 }
 

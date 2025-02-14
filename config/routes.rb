@@ -16,4 +16,7 @@ Rails.application.routes.draw do
     get '/', to: 'demos#index'
     get '/sendfile', to: 'demos#sendfile_demo', as: :sendfile_demo
   end
+
+  get 'test401', to: ->(hash) { [ 401, {}, [ '401' ] ] }
+  get 'test404', to: ->(hash) { [ 404, {}, [ '404' ] ] }
 end
