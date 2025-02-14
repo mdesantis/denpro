@@ -16,7 +16,7 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	@static file
 	@notStatic not file
 
-	header @static Cache-Control "public, max-age=31536000"
+	header @static Cache-Control "public, max-age=31556952"
 
 	reverse_proxy @notStatic rls:3000 {
 		@err status 400 404 422 500
