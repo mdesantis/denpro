@@ -13,7 +13,7 @@ services:
     volumes:
       - ./.compose/volumes/cdy/Caddyfile:/etc/caddy/Caddyfile:ro
       - rls-public:/srv/public:ro
-      - rls-storage:/srv/private:ro
+      - rls-storage:/srv/storage:ro
       - cdy_data:/data
       - cdy_config:/config
   pgq:

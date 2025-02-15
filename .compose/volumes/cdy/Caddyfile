@@ -9,6 +9,7 @@
 }
 
 http://localhost, http://localhost.localdomain, http://*.localhost, http://*.localhost.localdomain {
+	log
 	root * /srv/public
 	file_server
 	encode zstd gzip
@@ -19,6 +20,20 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	header @static Cache-Control "public, max-age=31556952"
 
 	reverse_proxy @notStatic rls:3000 {
+		header_up X-Sendfile-Type "X-Sendfile"
+
+		@sendfile header X-Sendfile *
+
+		handle_response @sendfile {
+			root * /srv/storage
+			# rewrite * {rp.header.X-Sendfile}
+			log_append upstream_sendfile {rp.header.X-Sendfile}
+			rewrite * /rails/storage/h5/3n/h53n3t9isw5r00y8uvfjm70o57j6
+			uri * strip_prefix /rails/storage
+			method * GET
+			file_server
+		}
+
 		@err status 400 404 422 500
 
 		handle_response @err {
