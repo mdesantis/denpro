@@ -3,6 +3,12 @@
 # https://docs.docker.com/go/compose-spec-reference/
 
 services:
+  ngx:
+    image: nginx
+    ports:
+      - 8080:8080
+    volumes:
+      - .compose/volumes/ngx-conf/nginx.conf:/etc/nginx/nginx.conf:ro
   pgq:
     image: postgres
     restart: always
@@ -45,6 +51,7 @@ services:
       timeout: 5s
       retries: 3
 volumes:
+  ngx-conf:
   pgq-data:
 secrets:
   pgq-password:
