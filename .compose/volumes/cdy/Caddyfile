@@ -20,23 +20,15 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	# header @static Cache-Control "public, max-age=31556952"
 
 	reverse_proxy @notStatic rls:3000 {
-		header_up X-Sendfile-Type "X-Sendfile"
+		header_up X-Sendfile-Type "X-Accel-Redirect"
+		header_up X-Accel-Mapping "/rails/storage/=/"
 
-		@sendfile header X-Sendfile *
-
-		# handle_response @sendfile {
-		# 	root * /srv/storage
-		# 	log_append upstream_sendfile {rp.header.X-Sendfile}
-		# 	rewrite * /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
-		# 	method * GET
-		# 	file_server
-		# }
+		@sendfile header X-Accel-Redirect *
 
 		handle_response @sendfile {
 			root * /srv/storage
-			log_append upstream_sendfile {rp.header.X-Sendfile}
-			rewrite * {rp.header.X-Sendfile}
-			uri * strip_prefix /rails/storage
+			log_append upstream_sendfile {rp.header.X-Accel-Redirect}
+			rewrite * {rp.header.X-Accel-Redirect}
 			method * GET
 			file_server
 		}
@@ -54,32 +46,3 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 		file_server
 	}
 }
-
-#handle_response @sendfile {
-#root * /srv/private
-#rewrite {http.response.header.X-Sendfile}
-#file_server
-#}
-#handle_response @sendfile {
-#rewrite {http.response.header.X-Sendfile}
-#copy_response
-
-#root * /srv/private
-
-#header X-Sendfile /rails/storage ""
-# rewrite /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
-
-#file_server
-
-#copy_response_headers
-#respond "test"
-#}
-
-
-# @accel header X-Accel-Redirect *
-# handle_response @accel {
-# 	root * /path/to/private/files
-# 	rewrite {http.response.header.X-Accel-Redirect}
-# 	file_server
-# }
-# }
