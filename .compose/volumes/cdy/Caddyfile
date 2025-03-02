@@ -17,18 +17,25 @@ http://localhost, http://localhost.localdomain, http://*.localhost, http://*.loc
 	@static file
 	@notStatic not file
 
-	header @static Cache-Control "public, max-age=31556952"
+	# header @static Cache-Control "public, max-age=31556952"
 
 	reverse_proxy @notStatic rls:3000 {
 		header_up X-Sendfile-Type "X-Sendfile"
 
 		@sendfile header X-Sendfile *
 
+		# handle_response @sendfile {
+		# 	root * /srv/storage
+		# 	log_append upstream_sendfile {rp.header.X-Sendfile}
+		# 	rewrite * /nm/7b/nm7bj8axe6ozeqo5m4j7ojuqs48a
+		# 	method * GET
+		# 	file_server
+		# }
+
 		handle_response @sendfile {
 			root * /srv/storage
-			# rewrite * {rp.header.X-Sendfile}
 			log_append upstream_sendfile {rp.header.X-Sendfile}
-			rewrite * /rails/storage/h5/3n/h53n3t9isw5r00y8uvfjm70o57j6
+			rewrite * {rp.header.X-Sendfile}
 			uri * strip_prefix /rails/storage
 			method * GET
 			file_server
