@@ -12,8 +12,8 @@ services:
       # - 443:443/udp
     volumes:
       - ./.compose/volumes/cdy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - rls-public:/srv/public:ro
-      - rls-storage:/srv/storage:ro
+      - rls_public:/srv/public:ro
+      - rls_storage:/srv/storage:ro
       - cdy_data:/data
       - cdy_config:/config
   pgq:
@@ -21,12 +21,12 @@ services:
     restart: always
     user: postgres
     secrets:
-      - pgq-password
+      - pgq_password
     volumes:
-      - pgq-data:/var/lib/postgresql/data
+      - pgq_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=denpro
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq-password
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq_password
     expose:
       - 5432
     healthcheck:
@@ -40,13 +40,13 @@ services:
       pgq:
         condition: service_healthy
     secrets:
-      - pgq-password
-      - rls-credentials
+      - pgq_password
+      - rls_credentials
     environment:
       - DENPRO_DATABASE_HOST=pgq
-      - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgq-password
+      - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgq_password
       - RAILS_DO_NOT_FORCE_SSL=true
-      - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls-credentials
+      - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls_credentials
     command: ["./bin/rails", "server"]
     ports:
       - 3000:3000
@@ -58,16 +58,16 @@ services:
       timeout: 5s
       retries: 3
     volumes:
-      - rls-public:/rails/public
-      - rls-storage:/rails/storage
+      - rls_public:/rails/public
+      - rls_storage:/rails/storage
 volumes:
   cdy_data:
   cdy_config:
-  pgq-data:
-  rls-public:
-  rls-storage:
+  pgq_data:
+  rls_public:
+  rls_storage:
 secrets:
-  pgq-password:
+  pgq_password:
     file: .compose/secrets/pgq-password.txt
-  rls-credentials:
+  rls_credentials:
     file: config/credentials/production.key
