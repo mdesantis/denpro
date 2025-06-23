@@ -34,11 +34,16 @@ services:
       - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgq-password
       - RAILS_DO_NOT_FORCE_SSL=true
       - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls-credentials
-    command: ["./bin/rails", "server"]
+      - THRUSTER_HTTP_PORT=8080
+    # command: ["./bin/rails", "server"]
     ports:
       - 3000:3000
-    expose:
-      - 3000
+      - 8080:8080
+    # expose:
+    #   - 3000
+    #   - 8080
+    volumes:
+      - rls-thruster-storage:/rails/storage/thruster
     healthcheck:
       test: ["CMD", "curl", "--request", "HEAD", "--silent", "--fail", "http://localhost:3000/up"]
       interval: 10s
@@ -46,6 +51,7 @@ services:
       retries: 3
 volumes:
   pgq-data:
+  rls-thruster-storage:
 secrets:
   pgq-password:
     file: .compose/secrets/pgq-password.txt
