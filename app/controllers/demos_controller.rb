@@ -10,4 +10,7 @@ class DemosController < ApplicationController
 
   def mui_hello_world
   end
+
+  def mui_dashboard
+  end
 end

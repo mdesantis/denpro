@@ -17,5 +17,6 @@ Rails.application.routes.draw do
     get '/page1', to: 'demos#page1'
     get '/page2', to: 'demos#page2'
     get '/mui_hello_world', to: 'demos#mui_hello_world'
+    get '/mui_dashboard', to: 'demos#mui_dashboard'
   end
 end
