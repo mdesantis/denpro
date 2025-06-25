@@ -7,4 +7,7 @@ class DemosController < ApplicationController
 
   def page2
   end
+
+  def mui_hello_world
+  end
 end
