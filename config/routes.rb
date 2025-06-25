@@ -14,5 +14,7 @@ Rails.application.routes.draw do
 
   constraints subdomain: 'demos' do
     get '/', to: 'demos#index'
+    get '/page1', to: 'demos#page1'
+    get '/page2', to: 'demos#page2'
   end
 end
