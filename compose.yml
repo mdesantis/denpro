@@ -3,17 +3,17 @@
 # https://docs.docker.com/go/compose-spec-reference/
 
 services:
-  pgq:
+  pgl:
     image: postgres
     restart: always
     user: postgres
     secrets:
-      - pgq-password
+      - pgl-password
     volumes:
-      - pgq-data:/var/lib/postgresql/data
+      - pgl-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=denpro
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pgq-password
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgl-password
     expose:
       - 5432
     healthcheck:
@@ -24,14 +24,14 @@ services:
   rls:
     build: .
     depends_on:
-      pgq:
+      pgl:
         condition: service_healthy
     secrets:
-      - pgq-password
+      - pgl-password
       - rls-credentials
     environment:
-      - DENPRO_DATABASE_HOST=pgq
-      - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgq-password
+      - DENPRO_DATABASE_HOST=pgl
+      - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgl-password
       - RAILS_DO_NOT_FORCE_SSL=true
       - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls-credentials
       - THRUSTER_HTTP_PORT=8080
@@ -50,10 +50,10 @@ services:
       timeout: 5s
       retries: 3
 volumes:
-  pgq-data:
+  pgl-data:
   rls-thruster-storage:
 secrets:
-  pgq-password:
-    file: .compose/secrets/pgq-password.txt
+  pgl-password:
+    file: .compose/secrets/pgl-password.txt
   rls-credentials:
     file: config/credentials/production.key

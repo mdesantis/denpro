@@ -31,7 +31,7 @@ FROM base AS build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config libyaml-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems
@@ -39,6 +39,8 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
+
+COPY .nvmrc ./
 
 # Create a script file sourced by both interactive and non-interactive bash shells
 ENV BASH_ENV=/root/.bash_env
@@ -48,13 +50,12 @@ RUN touch "${BASH_ENV}" && \
     echo '. "${BASH_ENV}"' >> ~/.bashrc
 
 # Download and install nvm
-ENV NVM_VERSION=v0.40.1
+ENV NVM_VERSION=v0.40.3
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash && \
-    echo node > .nvmrc
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash
 
 SHELL ["/bin/bash", "-c"]
-RUN nvm install --lts --default --save && \
+RUN nvm install --default --save && \
     nvm install-latest-npm
 
 # Copy application code
