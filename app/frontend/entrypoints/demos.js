@@ -32,4 +32,17 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 
-import '~/demos'
+import '@hotwired/turbo-rails'
+
+// import * as Turbo from '@hotwired/turbo'
+// Turbo.start()
+
+import TurboReact from '~/lib/turbo_react'
+
+const components = import.meta.glob('~/components/**/*.(j|t)sx')
+const turboReact = new TurboReact(components)
+
+turboReact.start()
+
+
+// import '~/demos'

@@ -38,6 +38,7 @@
 /app/assets/builds/*
 !/app/assets/builds/.keep
 /public/assets
+/public/vite*
 
 # Ignore CI service files.
 /.github
