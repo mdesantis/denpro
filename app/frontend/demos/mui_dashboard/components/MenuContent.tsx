@@ -14,10 +14,10 @@ import InfoRoundedIcon from '@mui/icons-material/InfoRounded';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const mainListItems = [
-  { text: 'Home', icon: <HomeRoundedIcon /> },
-  { text: 'Analytics', icon: <AnalyticsRoundedIcon /> },
-  { text: 'Clients', icon: <PeopleRoundedIcon /> },
-  { text: 'Tasks', icon: <AssignmentRoundedIcon /> },
+  { text: 'Home', icon: <HomeRoundedIcon />, href: '/' },
+  { text: 'Analytics', icon: <AnalyticsRoundedIcon />, href: '/page1' },
+  { text: 'Clients', icon: <PeopleRoundedIcon />, href: '/page2' },
+  { text: 'Tasks', icon: <AssignmentRoundedIcon />, href: '/mui_hello_world' },
 ];
 
 const secondaryListItems = [
@@ -32,7 +32,7 @@ export default function MenuContent() {
       <List dense>
         {mainListItems.map((item, index) => (
           <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-            <ListItemButton selected={index === 0}>
+            <ListItemButton selected={index === 0} component="a" href={item.href}>
               <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
