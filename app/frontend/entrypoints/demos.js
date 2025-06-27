@@ -27,22 +27,6 @@
 // Example: Import a stylesheet in app/frontend/index.css
 // import '~/index.css'
 
-import '@fontsource/roboto/300.css'
-import '@fontsource/roboto/400.css'
-import '@fontsource/roboto/500.css'
-import '@fontsource/roboto/700.css'
-
-import '@hotwired/turbo-rails'
-
-// import * as Turbo from '@hotwired/turbo'
-// Turbo.start()
-
-import TurboReact from '~/lib/turbo_react'
-
-const components = import.meta.glob('~/components/**/*.(j|t)sx')
-const turboReact = new TurboReact(components)
-
-turboReact.start()
-
-
-// import '~/demos'
+import '~/initializers/roboto_font'
+import '~/initializers/turbo_rails'
+import '~/initializers/turbo_react'
