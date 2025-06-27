@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite'
-import RubyPlugin from 'vite-plugin-ruby'
+import RailsPlugin from 'vite-plugin-rails'
 import ReactPlugin from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [
-    RubyPlugin(),
+    RailsPlugin({ stimulus: false, sri: {} }),
     ReactPlugin()
   ],
   server: {
