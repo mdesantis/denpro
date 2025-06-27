@@ -1,4 +1,6 @@
 import { CacheProvider } from '@emotion/react';
+import { EmotionCache } from '@emotion/cache';
+import createEmotionCache from '~/lib/create_emotion_cache';
 import type {} from '@mui/x-date-pickers/themeAugmentation';
 import type {} from '@mui/x-charts/themeAugmentation';
 import type {} from '@mui/x-data-grid-pro/themeAugmentation';
@@ -25,11 +27,10 @@ const xThemeComponents = {
   ...datePickersCustomizations,
   ...treeViewCustomizations,
 };
-import createEmotionCache from '~/lib/create_emotion_cache';
 
-const cache = createEmotionCache();
+export default function Dashboard(props: { disableCustomTheme?: boolean, emotionCache?: EmotionCache }) {
+const cache = props.emotionCache ?? createEmotionCache()
 
-export default function Dashboard(props: { disableCustomTheme?: boolean }) {
   return (
     <CacheProvider value={cache}>
       <AppTheme {...props} themeComponents={xThemeComponents}>

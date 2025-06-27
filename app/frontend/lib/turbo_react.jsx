@@ -13,7 +13,7 @@ export default class TurboReact {
 
   mountComponents(bodyElement) {
     bodyElement.reactComponentRoots = []
-    const componentRoots = bodyElement.getElementsByClassName('turbo-react-root')
+    const componentRoots = bodyElement.getElementsByClassName('react-component-root')
 
     for (const componentRoot of componentRoots) {
       this.mountComponent(componentRoot, bodyElement)
@@ -33,9 +33,8 @@ export default class TurboReact {
   }
 
   async mountComponent(rootElement, bodyElement) {
-    const name = rootElement.getAttribute('data-turbo-react-component')
-    const path = `/components/${name}.jsx`
-    const rawProps = rootElement.getAttribute('data-turbo-react-props')
+    const name = rootElement.getAttribute('data-react-component-name')
+    const rawProps = rootElement.getAttribute('data-react-component-props')
     const props = JSON.parse(rawProps)
     const lazyComponentModule = this.components[`/components/${name}.jsx`] ?? this.components[`/components/${name}.tsx`]
 

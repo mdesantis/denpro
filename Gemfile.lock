@@ -114,6 +114,9 @@ GEM
       raabro (~> 1.4)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    http-2 (1.1.1)
+    httpx (1.5.1)
+      http-2 (>= 1.0.0)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     io-console (0.8.0)
@@ -369,6 +372,7 @@ DEPENDENCIES
   brakeman
   capybara
   debug
+  httpx
   jbuilder
   kamal
   pg (~> 1.1)
