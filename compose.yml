@@ -22,7 +22,9 @@ services:
       timeout: 5s
       retries: 3
   rls:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.rls
     depends_on:
       pgl:
         condition: service_healthy
