@@ -81,10 +81,10 @@ COPY --from=build /workdir /workdir
 
 ARG GID=10001
 ARG UID=10001
-RUN groupadd --system --gid "${GID}" rails && \
-    useradd rails --create-home --shell /bin/bash --uid "${UID}" --gid "${GID}" && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
+RUN groupadd --system --gid "${GID}" runner && \
+    useradd runner --create-home --shell /bin/bash --uid "${UID}" --gid "${GID}" && \
+    chown -R runner:runner db log storage tmp
+USER runner:runner
 
 # Entrypoint prepares the database.
 ENTRYPOINT ["/workdir/bin/docker-entrypoint-rls"]
