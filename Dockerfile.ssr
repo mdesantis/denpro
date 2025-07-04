@@ -75,7 +75,12 @@ RUN ./bin/vite build --ssr
 ARG NODE_VERSION
 FROM docker.io/library/node:$NODE_VERSION-slim
 
-COPY --from=build /workdir/public/vite-ssr /workdir
+WORKDIR /workdir
+
+COPY --from=build /workdir/public/vite-ssr ./
+
+COPY package.json package-lock.json ./
+RUN npm install
 
 ARG GID=10001
 ARG UID=10001
@@ -85,4 +90,5 @@ USER runner:runner
 
 ENV NODE_ENV=production
 
-CMD ["node", "ssr.js"]
+EXPOSE 5173
+CMD ["node", "/workdir/ssr.js"]
