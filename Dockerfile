@@ -85,7 +85,7 @@ RUN groupadd --system --gid "${GID}" rails && \
 USER rails:rails
 
 # Entrypoint prepares the database.
-ENTRYPOINT ["/workdir/bin/docker-entrypoint"]
+ENTRYPOINT ["/workdir/bin/docker-entrypoint-rls"]
 
 # Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 80
