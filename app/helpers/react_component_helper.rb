@@ -22,8 +22,8 @@ module ReactComponentHelper
   end
 
   def perform_ssr(name, props)
-    host = ENV.fetch('VITE_SSR_SERVER_HOST', '0.0.0.0')
-    port = ENV.fetch('VITE_SSR_SERVER_PORT', '5173')
+    host = ENV.fetch('DENPRO_SSR_HOST', '0.0.0.0')
+    port = ENV.fetch('DENPRO_SSR_PORT', '5173')
     response = HTTPX.post(
       "http://#{host}:#{port}/ssr",
       headers: { 'Content-Type' => 'application/json' },
