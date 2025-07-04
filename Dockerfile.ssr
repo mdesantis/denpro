@@ -77,6 +77,12 @@ FROM docker.io/library/node:$NODE_VERSION-slim
 
 COPY --from=build /workdir/public/vite-ssr /workdir
 
+ARG GID=10001
+ARG UID=10001
+RUN groupadd --system --gid "${GID}" runner && \
+    useradd runner --create-home --shell /bin/bash --uid "${UID}" --gid "${GID}"
+USER runner:runner
+
 ENV NODE_ENV=production
 
-ENTRYPOINT ["node", "ssr.js"]
+CMD ["node", "ssr.js"]
