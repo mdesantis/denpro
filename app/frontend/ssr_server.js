@@ -70,6 +70,10 @@ if (!isProduction) {
 
 app.get('/up', (_req, res) => res.status(204).send())
 
+// Warm up SSR entrypoint on production to prevent the first request to
+// load it increasing its response time.
+const serverRenderingModuleProduction = isProduction ? (await import('~/lib/ssr.jsx')) : null
+
 app.post('/ssr', async (req, res) => {
   try {
     let { name, props } = req.body
@@ -81,7 +85,7 @@ app.post('/ssr', async (req, res) => {
     if (!props) props = {}
 
     const serverRenderingModule = isProduction
-      ? (await import('~/lib/ssr.jsx'))
+      ? serverRenderingModuleProduction
       : (await vite.ssrLoadModule('~/lib/ssr.jsx'))
 
     const { render, createEmotionCache } = serverRenderingModule
@@ -107,7 +111,7 @@ app.post('/ssr', async (req, res) => {
     const emotionChunks = extractCriticalToChunks(content)
     const emotionStyles = constructStyleTagsFromChunks(emotionChunks)
 
-    res.json({ content, emotionStyles });
+    res.json({ content, emotionStyles })
   } catch (error) {
     vite?.ssrFixStacktrace(error)
 
