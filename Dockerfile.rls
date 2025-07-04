@@ -10,6 +10,9 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.4.4
+ARG NVM_VERSION=0.40.3
+ARG NODE_VERSION=22.17.0
+
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
 # Rails app lives here
@@ -34,8 +37,6 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config libyaml-dev && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Install node via nvm
-COPY .nvmrc ./
 # Create a script file sourced by both interactive and non-interactive bash shells
 ENV BASH_ENV=/root/.bash_env
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -44,12 +45,13 @@ RUN touch "${BASH_ENV}" && \
     echo '. "${BASH_ENV}"' >> ~/.bashrc
 
 # Download and install nvm
-ENV NVM_VERSION=v0.40.3
+ARG NVM_VERSION
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash
 
+ARG NODE_VERSION
 SHELL ["/bin/bash", "-c"]
-RUN nvm install --default --save && \
+RUN nvm install "${NODE_VERSION}" --default --save && \
     nvm install-latest-npm
 
 # Install application gems
