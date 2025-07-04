@@ -34,6 +34,7 @@ services:
     environment:
       - DENPRO_DATABASE_HOST=pgl
       - DENPRO_DATABASE_PASSWORD_FILE=/run/secrets/pgl-password
+      - DENPRO_SSR_HOST=ssr
       - RAILS_DO_NOT_FORCE_SSL=true
       - RAILS_CREDENTIALS_KEY_FILE=/run/secrets/rls-credentials
       - THRUSTER_HTTP_PORT=8080
@@ -51,6 +52,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  ssr:
+    build:
+      context: .
+      dockerfile: Dockerfile.ssr
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5173/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 5173:5173
 volumes:
   pgl-data:
   rls-thruster-storage:
