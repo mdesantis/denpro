@@ -1,2 +1,3 @@
 web: bin/rails s
 vit: bin/vite dev
+ssr: bin/vite build --ssr --mode development && bin/vite ssr --mode development
