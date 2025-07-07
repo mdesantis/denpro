@@ -3,7 +3,7 @@ import { CacheProvider } from '@emotion/react';
 import createEmotionCache from '~/lib/create_emotion_cache';
 
 export default function MuiHelloWorld({ emotionCache }) {
-  const cache = emotionCache || createEmotionCache()
+  const cache = emotionCache ?? createEmotionCache()
 
   return (
     <CacheProvider value={cache}>
