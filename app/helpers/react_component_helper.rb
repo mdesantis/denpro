@@ -22,13 +22,16 @@ module ReactComponentHelper
   end
 
   def perform_ssr(name, props)
-    host = ENV.fetch('DENPRO_SSR_HOST', '0.0.0.0')
-    port = ENV.fetch('DENPRO_SSR_PORT', '5173')
-    response = HTTPX.post(
-      "http://#{host}:#{port}/ssr",
-      headers: { 'Content-Type' => 'application/json' },
-      body: { name: name, props: props }.to_json
-    )
+    logger.info "  Starting SSR request for React component #{name.inspect}"
+    logger.info "    Props: #{props.inspect}" if props.present?
+
+    starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    response = make_ssr_request name, props
+
+    ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    elapsed_milliseconds = (ending - starting).in_milliseconds.round(1)
+
+    logger.info "  Completed SSR request #{response.status} in #{elapsed_milliseconds}ms"
 
     if response.error
       if Rails.env.production?
@@ -59,5 +62,18 @@ module ReactComponentHelper
 
   def turbo_drive?
     request.headers.include?('x-turbo-request-id')
+  end
+
+  private
+
+  def make_ssr_request(name, props)
+    host = ENV.fetch('DENPRO_SSR_HOST', '0.0.0.0')
+    port = ENV.fetch('DENPRO_SSR_PORT', '5173')
+
+    HTTPX.post(
+      "http://#{host}:#{port}/ssr",
+      headers: { 'Content-Type' => 'application/json' },
+      body: { name: name, props: props }.to_json
+    )
   end
 end
