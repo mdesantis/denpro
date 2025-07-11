@@ -19,4 +19,12 @@ Rails.application.routes.draw do
     get '/mui_hello_world', to: 'demos#mui_hello_world'
     get '/mui_dashboard', to: 'demos#mui_dashboard'
   end
+
+  constraints subdomain: 'app' do
+    get '/', to: redirect('/dashboard', status: :found)
+
+    namespace :app, path: '' do
+      resource :dashboard, only: :show
+    end
+  end
 end
