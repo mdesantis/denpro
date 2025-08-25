@@ -21,10 +21,6 @@ Rails.application.routes.draw do
   end
 
   constraints subdomain: 'app' do
-    get '/', to: redirect('/dashboard', status: :found)
-
-    namespace :app, path: '' do
-      resource :dashboard, only: :show
-    end
+    get '/', to: 'app/dashboards#show'
   end
 end
