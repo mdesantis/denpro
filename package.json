@@ -17,16 +17,16 @@
     "@hotwired/turbo-rails": "^8.0.20",
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
-    "@mui/x-charts": "^8.21.0",
-    "@mui/x-data-grid": "^8.21.0",
-    "@mui/x-date-pickers": "^8.21.0",
-    "@mui/x-tree-view": "^8.21.0",
+    "@mui/x-charts": "^8.22.0",
+    "@mui/x-data-grid": "^8.22.0",
+    "@mui/x-date-pickers": "^8.22.0",
+    "@mui/x-tree-view": "^8.22.0",
     "@react-spring/web": "^10.0.3",
     "dayjs": "^1.11.19",
     "express": "^5.2.1",
     "express-request-id": "^3.0.0",
     "morgan": "^1.10.1",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   }
 }
