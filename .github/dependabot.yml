@@ -3,10 +3,10 @@ updates:
 - package-ecosystem: bundler
   directory: "/"
   schedule:
-    interval: monthly
+    interval: quarterly
   open-pull-requests-limit: 25
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
-    interval: monthly
+    interval: quarterly
   open-pull-requests-limit: 25
