@@ -4,13 +4,15 @@
 
 services:
   pgl:
-    image: postgres
+    image: postgres:18
     restart: always
+    # set shared memory limit when using docker compose
+    shm_size: 128mb
     user: postgres
     secrets:
       - pgl-password
     volumes:
-      - pgl-data:/var/lib/postgresql/data
+      - pgl-data:/var/lib/postgresql
     environment:
       - POSTGRES_USER=denpro
       - PGPORT=15432
@@ -46,7 +48,16 @@ services:
     volumes:
       - rls-thruster-storage:/rails/storage/thruster
     healthcheck:
-      test: ["CMD", "curl", "--request", "HEAD", "--silent", "--fail", "http://localhost:18080/up"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "--request",
+          "HEAD",
+          "--silent",
+          "--fail",
+          "http://localhost:18080/up",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
