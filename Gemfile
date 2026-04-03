@@ -34,7 +34,7 @@ gem 'thruster', require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem 'image_processing', '~> 1.2'
 
-gem 'vite_ruby', '3.9.3'
+gem 'vite_ruby', '3.10.2'
 gem 'vite_rails', '3.0.20'
 
 gem 'turbo-rails'
