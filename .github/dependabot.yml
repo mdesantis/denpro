@@ -5,6 +5,11 @@ updates:
   schedule:
     interval: quarterly
   open-pull-requests-limit: 25
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: quarterly
+  open-pull-requests-limit: 25
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
