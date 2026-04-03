@@ -111,7 +111,13 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    ffi (1.17.3-aarch64-linux-gnu)
+    ffi (1.17.3-aarch64-linux-musl)
+    ffi (1.17.3-arm-linux-gnu)
+    ffi (1.17.3-arm-linux-musl)
+    ffi (1.17.3-arm64-darwin)
     ffi (1.17.3-x86_64-linux-gnu)
+    ffi (1.17.3-x86_64-linux-musl)
     fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -416,7 +422,8 @@ DEPENDENCIES
   thruster
   turbo-rails
   tzinfo-data
-  vite_rails
+  vite_rails (= 3.0.20)
+  vite_ruby (= 3.9.3)
   web-console
 
 BUNDLED WITH
