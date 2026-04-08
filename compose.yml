@@ -27,7 +27,7 @@ services:
   rls:
     build:
       context: .
-      dockerfile: Dockerfile.rls
+      dockerfile: Dockerfile
     depends_on:
       pgl:
         condition: service_healthy
@@ -46,25 +46,18 @@ services:
     ports:
       - 18080:18080
     volumes:
-      - rls-thruster-storage:/rails/storage/thruster
+      - rls-thruster-storage:/workdir/storage/thruster
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "--request",
-          "HEAD",
-          "--silent",
-          "--fail",
-          "http://localhost:18080/up",
-        ]
+      test: ["CMD", "curl", "--fail", "http://localhost:18080/up"]
       interval: 10s
       timeout: 5s
       retries: 3
   ssr:
     build:
       context: .
-      dockerfile: Dockerfile.ssr
+      dockerfile: Dockerfile
+    entrypoint: ["/workdir/bin/docker-entrypoint-ssr"]
+    command: ["node", "public/vite-ssr/ssr.js"]
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:15173/up"]
       interval: 10s
