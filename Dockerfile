@@ -9,9 +9,9 @@
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=4.0.1
-ARG NVM_VERSION=0.40.3
-ARG NODE_VERSION=24.11.0
+ARG RUBY_VERSION=4.0.2
+ARG NVM_VERSION=0.40.4
+ARG NODE_VERSION=24.14.1
 
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
