@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Exit on error. Append "|| true" if you expect an error.
+set -o errexit
+set -o errtrace
+set -o nounset
+set -o pipefail
+# Display executed commands.
+# set -o xtrace
+
+export NODE_ENV=production
+export RACK_ENV=production
+export RAILS_ENV=production
+
+bin/rails assets:clobber
+VITE_RUBY_SSR_BUILD_ENABLED=true SECRET_KEY_BASE_DUMMY=1 bin/rails assets:precompile
+foreman start -f Procfile.prod-local
