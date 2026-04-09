@@ -27,7 +27,6 @@ services:
   rls:
     build:
       context: .
-      dockerfile: Dockerfile
     depends_on:
       pgl:
         condition: service_healthy
@@ -55,7 +54,6 @@ services:
   ssr:
     build:
       context: .
-      dockerfile: Dockerfile
     entrypoint: ["/workdir/bin/docker-entrypoint-ssr"]
     command: ["node", "public/vite-ssr/ssr.js"]
     healthcheck:

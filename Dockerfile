@@ -25,12 +25,14 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
+ENV BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    NODE_ENV="production" \
     NVM_DIR="/usr/local/nvm" \
+    RACK_ENV="production" \
+    RAILS_ENV="production" \
     VITE_RUBY_SSR_BUILD_ENABLED="true"
 
 # Throw-away build stage to reduce size of final image
