@@ -22,8 +22,8 @@ module ReactComponentHelper
   end
 
   def perform_ssr(name, props)
-    logger.info "  Starting SSR request for React component #{name.inspect}"
-    logger.info "    Props: #{props.inspect}" if props.present?
+    logger.debug "  Starting SSR request for React component #{name.inspect}"
+    logger.debug "    Props: #{props.inspect}" if props.present?
 
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     response = make_ssr_request name, props
@@ -32,7 +32,7 @@ module ReactComponentHelper
     elapsed_milliseconds = (ending - starting).in_milliseconds.round(1)
 
     status = response.respond_to?(:status) ? response.status : 'N/A'
-    logger.info "  Completed SSR request #{status} in #{elapsed_milliseconds}ms"
+    logger.debug "  Completed SSR request #{status} in #{elapsed_milliseconds}ms"
 
     if response.error
       if Rails.env.production?
