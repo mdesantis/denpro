@@ -31,11 +31,12 @@ module ReactComponentHelper
     ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     elapsed_milliseconds = (ending - starting).in_milliseconds.round(1)
 
-    logger.info "  Completed SSR request #{response.status} in #{elapsed_milliseconds}ms"
+    status = response.respond_to?(:status) ? response.status : 'N/A'
+    logger.info "  Completed SSR request #{status} in #{elapsed_milliseconds}ms"
 
     if response.error
       if Rails.env.production?
-        Rails.logger.error "Cannot perform SSR: #{response.error}"
+        Rails.logger.error "  Could not perform SSR: #{response.error}"
         return
       end
 
