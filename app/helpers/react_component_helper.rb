@@ -70,11 +70,13 @@ module ReactComponentHelper
   def make_ssr_request(name, props)
     host = ENV.fetch('DENPRO_SSR_HOST', '0.0.0.0')
     port = ENV.fetch('DENPRO_SSR_PORT', '5173')
+    timeout = ENV.fetch('DENPRO_SSR_TIMEOUT', '0.25').to_f
 
     HTTPX.post(
       "http://#{host}:#{port}/ssr",
       headers: { 'Content-Type' => 'application/json' },
-      body: { name: name, props: props }.to_json
+      body: { name: name, props: props }.to_json,
+      timeout: { connect_timeout: timeout, read_timeout: timeout }
     )
   end
 end
