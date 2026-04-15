@@ -76,7 +76,14 @@ module ReactComponentHelper
       "http://#{host}:#{port}/ssr",
       headers: { 'Content-Type' => 'application/json' },
       body: { name: name, props: props }.to_json,
-      timeout: { connect_timeout: timeout, read_timeout: timeout }
+      timeout: {
+        connect_timeout: timeout,
+        operation_timeout: timeout,
+        read_timeout: timeout,
+        request_timeout: timeout,
+        settings_timeout: timeout,
+        write_timeout: timeout
+      }
     )
   end
 end
