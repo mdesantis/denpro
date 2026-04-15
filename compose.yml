@@ -47,7 +47,7 @@ services:
     volumes:
       - rls-thruster-storage:/workdir/storage/thruster
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:18080/up"]
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:18080/up"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -57,7 +57,7 @@ services:
     entrypoint: ["/workdir/bin/docker-entrypoint-ssr"]
     command: ["node", "public/vite-ssr/ssr.js"]
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:15173/up"]
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:15173/up"]
       interval: 10s
       timeout: 5s
       retries: 3
