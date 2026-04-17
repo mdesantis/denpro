@@ -48,7 +48,7 @@ module ReactComponentHelper
           rescue JSON::ParserError
           end
 
-        raise ComponentNotFound, "Component \"#{name}\" not found" if parsed_body['message'] == 'Component not found'
+        raise ComponentNotFound, "Component \"#{name}\" not found" if parsed_body in { message: 'Component not found' }
       end
 
       raise response.error

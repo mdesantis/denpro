@@ -2,7 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 
 export default class TurboReact {
-  constructor(components) {
+  constructor({ components, componentsRootDir = '' }) {
+    this.componentsRootDir = componentsRootDir
     this.components = components
   }
 
@@ -36,7 +37,7 @@ export default class TurboReact {
     const name = rootElement.getAttribute('data-react-component-name')
     const rawProps = rootElement.getAttribute('data-react-component-props')
     const props = JSON.parse(rawProps)
-    const lazyComponentModule = this.components[`/components/${name}.jsx`] ?? this.components[`/components/${name}.tsx`]
+    const lazyComponentModule = this.components[`${this.componentsRootDir}/components/${name}.jsx`] ?? this.components[`${this.componentsRootDir}/components/${name}.tsx`]
 
     if(!lazyComponentModule) {
       throw new Error(`[TurboReact] Missing component with name: "${name}"`)
