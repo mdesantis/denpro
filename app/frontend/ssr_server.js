@@ -9,12 +9,11 @@ const unixSocket = process.env.VITE_SSR_SERVER_UNIX_SOCKET || '/tmp/vite_ssr_ser
 const host = process.env.VITE_SSR_SERVER_HOST || '0.0.0.0'
 const port = process.env.VITE_SSR_SERVER_PORT || 5173
 const app = express()
+const morganGetDateToken = morgan['date']
+const isHealthcheck = (req) => req.path === '/up'
 
 morgan.token('id', (req) => req.id)
 morgan.token('error', (req) => req.errorDescription)
-
-const morganGetDateToken = morgan['date']
-
 morgan.token('date', (req, res, format) => {
   switch (format || 'web') {
     case 'clf':
@@ -33,15 +32,15 @@ app.use(requestID({ setHeader: false }))
 
 app.use(morgan(
   "I, [:date[iso]]  INFO -- : [:id] Started :method \":url\" for :remote-addr at :date[ruby]",
-  { immediate: true }
+  { immediate: true, skip: isHealthcheck }
 ))
 app.use(morgan(
   "I, [:date[iso]]  INFO -- : [:id] Completed :status in :response-time[0] ms",
-  { skip: (_req, res) => res.statusCode >= 400 }
+  { skip: (req, res) => isHealthcheck(req) || res.statusCode >= 400 }
 ))
 app.use(morgan(
   "E, [:date[iso]] ERROR -- : [:id] :error for :remote-addr",
-  { skip: (_req, res) => res.statusCode < 400 }
+  { skip: (req, res) => isHealthcheck(req) || res.statusCode < 400 }
 ))
 app.use(express.json({ limit: '20mb' }))
 
