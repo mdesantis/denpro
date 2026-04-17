@@ -1,6 +1,5 @@
 import express from 'express'
 import createEmotionServer from '@emotion/server/create-instance'
-import requestID from 'express-request-id'
 import morgan from 'morgan'
 
 const isProduction = process.env.NODE_ENV === 'production'
@@ -28,7 +27,7 @@ morgan.token('date', (req, res, format) => {
   }
 })
 
-app.use(requestID({ setHeader: false }))
+app.use((req, _res, next) => { req.id = crypto.randomUUID(); next() })
 
 app.use(morgan(
   "I, [:date[iso]]  INFO -- : [:id] Started :method \":url\" for :remote-addr at :date[ruby]",
