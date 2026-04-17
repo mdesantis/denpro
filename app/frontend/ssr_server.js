@@ -1,127 +1,21 @@
 import express from 'express'
-import createEmotionServer from '@emotion/server/create-instance'
-import morgan from 'morgan'
+import loggerMiddleware from './ssr_server/logger.js'
+import { viteMiddleware, ssrRoute } from './ssr_server/renderer.js'
 
-const isProduction = process.env.NODE_ENV === 'production'
 const listenToUnixSocket = process.env.VITE_SSR_SERVER_LISTEN_TO_UNIX_SOCKET
 const unixSocket = process.env.VITE_SSR_SERVER_UNIX_SOCKET || '/tmp/vite_ssr_server.sock'
 const host = process.env.VITE_SSR_SERVER_HOST || '0.0.0.0'
 const port = process.env.VITE_SSR_SERVER_PORT || 5173
+
 const app = express()
-const morganGetDateToken = morgan['date']
-const isHealthcheck = (req) => req.path === '/up'
 
-morgan.token('id', (req) => req.id)
-morgan.token('error', (req) => req.errorDescription)
-morgan.token('date', (req, res, format) => {
-  switch (format || 'web') {
-    case 'clf':
-    case 'iso':
-    case 'web':
-      return morganGetDateToken(req, res, format)
-    case 'ruby': // Ruby's `Time.now.to_s` format
-      const isoDateParts = new Date().toISOString().split('T')
-      const ymd = isoDateParts[0]
-      const hms = isoDateParts[1].split('.')[0]
-      return `${ymd} ${hms} +0000`
-  }
-})
-
-app.use((req, _res, next) => {
-  req.id = req.headers['x-request-id'] || crypto.randomUUID()
-  next()
-})
-
-app.use(morgan(
-  "I, [:date[iso]]  INFO -- : [:id] Started :method \":url\" for :remote-addr at :date[ruby]",
-  { immediate: true, skip: isHealthcheck }
-))
-app.use(morgan(
-  "I, [:date[iso]]  INFO -- : [:id] Completed :status in :response-time[0] ms",
-  { skip: (req, res) => isHealthcheck(req) || res.statusCode >= 400 }
-))
-app.use(morgan(
-  "E, [:date[iso]] ERROR -- : [:id] :error for :remote-addr",
-  { skip: (req, res) => isHealthcheck(req) || res.statusCode < 400 }
-))
+app.use((req, _res, next) => { req.id = req.headers['x-request-id'] || crypto.randomUUID(); next() })
+app.use(loggerMiddleware)
+if (viteMiddleware) app.use(viteMiddleware)
 app.use(express.json({ limit: '20mb' }))
 
-// Add Vite or respective production middlewares
-let vite
-
-if (!isProduction) {
-  const { createServer } = await import('vite')
-
-  vite = await createServer({
-    server: { middlewareMode: true },
-    appType: 'custom',
-    base: '/'
-  })
-
-  // Use vite's connect instance as middleware. If you use your own
-  // express router (express.Router()), you should use router.use
-  app.use((req, res, next) => {
-    // When the server restarts (for example after the user modifies
-    // vite.config.js), `vite.middlewares` will be reassigned. Calling
-    // `vite.middlewares` inside a wrapper handler ensures that the
-    // latest Vite middlewares are always used.
-    vite.middlewares.handle(req, res, next)
-  })
-}
-
 app.get('/up', (_req, res) => res.status(204).send())
-
-// Warm up SSR entrypoint on production to prevent the first request to
-// load it increasing its response time.
-const serverRenderingModuleProduction = isProduction ? (await import('~/lib/ssr.jsx')) : null
-
-app.post('/ssr', async (req, res) => {
-  try {
-    let { name, props } = req.body
-
-    if (!name) {
-      res.status(400).json({ message: 'Component name must be provided' })
-      return
-    }
-    if (!props) props = {}
-
-    const serverRenderingModule = isProduction
-      ? serverRenderingModuleProduction
-      : (await vite.ssrLoadModule('~/lib/ssr.jsx'))
-
-    const { render, createEmotionCache } = serverRenderingModule
-
-    const emotionCache = createEmotionCache()
-    const { extractCriticalToChunks, constructStyleTagsFromChunks } = createEmotionServer(emotionCache)
-
-    props.emotionCache = emotionCache
-
-    // Render the component to a string
-    const rendering = render(name, props)
-
-    if (!rendering) {
-      const description = `Component "${name}" not found`
-      req.errorDescription = description
-      res.status(404).json({ error: { description } })
-      return
-    }
-
-    const { content } = rendering
-
-    // Grab the CSS from emotion
-    const emotionChunks = extractCriticalToChunks(content)
-    const emotionStyles = constructStyleTagsFromChunks(emotionChunks)
-
-    res.json({ content, emotionStyles })
-  } catch (error) {
-    vite?.ssrFixStacktrace(error)
-
-    const { message: description, stack } = error
-    req.errorDescription = description
-
-    res.status(500).json({ error: { description, stack } })
-  }
-})
+app.post('/ssr', ssrRoute)
 
 let server
 
