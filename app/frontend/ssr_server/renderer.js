@@ -1,10 +1,10 @@
 import createEmotionServer from '@emotion/server/create-instance'
 
 const isProduction = process.env.NODE_ENV === 'production'
-// Warm up SSR entrypoint on production to prevent the first request to
-// load it increasing its response time.
+// Warm up SSR entrypoint on production to prevent the first request to load it increasing its response time.
 const serverRenderingModuleProduction = isProduction ? (await import('~/lib/ssr.jsx')) : null
 
+// Add Vite or respective production middlewares
 let vite
 
 if (!isProduction) {
@@ -17,13 +17,11 @@ if (!isProduction) {
   })
 }
 
-// Use vite's connect instance as middleware. If you use your own
-// express router (express.Router()), you should use router.use
+// Use vite's connect instance as middleware. If you use your own express router (`express.Router()`), you should use
+// `router.use`.
 //
-// When the server restarts (for example after the user modifies
-// vite.config.js), `vite.middlewares` will be reassigned. Calling
-// `vite.middlewares` inside a wrapper handler ensures that the
-// latest Vite middlewares are always used.
+// When the server restarts (for example after the user modifies vite.config.js), `vite.middlewares` will be reassigned.
+// Calling `vite.middlewares` inside a wrapper handler ensures that the latest Vite middlewares are always used.
 export const viteMiddleware = vite
   ? (req, res, next) => vite.middlewares.handle(req, res, next)
   : null
