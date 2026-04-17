@@ -53,7 +53,7 @@ export async function ssrRoute(req, res) {
     if (!rendering) {
       const description = `Component "${name}" not found`
       req.errorDescription = description
-      res.status(404).json({ error: { description } })
+      res.status(404).json({ error: { type: 'component_not_found', description } })
       return
     }
 
