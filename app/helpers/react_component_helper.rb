@@ -74,7 +74,7 @@ module ReactComponentHelper
 
     HTTPX.post(
       "http://#{host}:#{port}/ssr",
-      headers: { 'Content-Type' => 'application/json' },
+      headers: { 'Content-Type' => 'application/json', 'X-Request-ID' => request.uuid },
       body: { name: name, props: props }.to_json,
       timeout: {
         connect_timeout: timeout,
