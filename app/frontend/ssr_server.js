@@ -27,7 +27,10 @@ morgan.token('date', (req, res, format) => {
   }
 })
 
-app.use((req, _res, next) => { req.id = req.headers['x-request-id'] || crypto.randomUUID(); next() })
+app.use((req, _res, next) => {
+  req.id = req.headers['x-request-id'] || crypto.randomUUID()
+  next()
+})
 
 app.use(morgan(
   "I, [:date[iso]]  INFO -- : [:id] Started :method \":url\" for :remote-addr at :date[ruby]",
