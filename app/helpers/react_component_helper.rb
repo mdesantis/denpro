@@ -28,17 +28,11 @@ module ReactComponentHelper
     logger.info "  Starting SSR request for React component #{name.inspect}"
     logger.info "    Props: #{props.inspect}" if props.present?
 
-    starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-
     body = { name: name, props: props }
     nonce = content_security_policy_nonce
     body[:nonce] = nonce if nonce.present?
 
     result = ssr_render(body, bundle: :application)
-
-    ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    elapsed = (ending - starting).in_milliseconds.round(1)
-    logger.info "  Completed SSR request in #{elapsed}ms"
 
     return unless result.is_a?(Hash)
 
