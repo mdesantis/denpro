@@ -1,2 +1,2 @@
-web: bin/rails s
+web: npx vite build --ssr && bin/rails s
 ssr: npx vite build --ssr --watch

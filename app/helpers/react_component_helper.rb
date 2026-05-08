@@ -30,18 +30,17 @@ module ReactComponentHelper
 
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-    bundle = find_bundle(:application)
-
     body = { name: name, props: props }
     nonce = content_security_policy_nonce
     body[:nonce] = nonce if nonce.present?
 
-    result = bundle.render(body)
+    result = ssr_render(body, bundle: :application)
 
     ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    elapsed_milliseconds = (ending - starting).in_milliseconds.round(1)
+    elapsed = (ending - starting).in_milliseconds.round(1)
+    logger.info "  Completed SSR request in #{elapsed}ms"
 
-    logger.info "  Completed SSR request in #{elapsed_milliseconds}ms"
+    return unless result.is_a?(Hash)
 
     if result['error']
       handle_ssr_error(result['error'], name)
@@ -52,10 +51,6 @@ module ReactComponentHelper
       content: result['content'],
       emotion_styles: result['emotionStyles']
     }
-  rescue SSR::Deno::RenderError, SSR::Deno::JsRuntimeWorkerError,
-         SSR::Deno::JsRuntimeOutOfMemoryError, SSR::Deno::BundleNotFoundError => error
-    handle_ssr_runtime_error(error, name)
-    nil
   rescue JSON::ParserError => error
     if Rails.env.production?
       logger.error "  SSR response parse error: #{error.message}"
@@ -81,28 +76,7 @@ module ReactComponentHelper
     end
   end
 
-  def handle_ssr_runtime_error(error, name)
-    if Rails.env.production?
-      logger.error "  Could not perform SSR: #{error.message}"
-      return
-    end
-    raise error
-  end
-
   def turbo_drive?
     request.headers.include?('x-turbo-request-id')
-  end
-
-  def find_bundle(name)
-    bundle = SSR::Deno::Bundle.registry[name]
-    return bundle if bundle.is_a?(SSR::Deno::Bundle)
-
-    if bundle.is_a?(Hash)
-      SSR::Deno::Bundle.create_bundles!
-      return SSR::Deno::Bundle.registry[name]
-    end
-
-    raise SSR::Deno::BundleNotFoundError,
-          "SSR bundle #{name.inspect} not registered"
   end
 end
