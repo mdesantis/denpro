@@ -52,6 +52,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+  # STALE — can be dropped. SSR now runs in-process via ssr-deno Ruby gem.
   ssr:
     build:
       context: .
