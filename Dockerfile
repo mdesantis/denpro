@@ -74,7 +74,9 @@ COPY . .
 # Precompile bootsnap code for faster boot times.
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
+# TODO: Post-SSR-migration — verify assets:precompile also builds SSR bundle
+# (npx vite build --ssr). rails_vite may or may not hook this automatically.
+# Test with: docker build . && check dist/server/ssr.js exists.
 # hadolint ignore=DL3059
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
