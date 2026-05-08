@@ -30,8 +30,8 @@ Rails.application.configure do
     policy.object_src  :none
     # In development, Vite injects inline scripts for HMR (e.g., React Refresh runtime).
     # These scripts cannot carry a nonce, so unsafe-inline is required.
-    policy.script_src  :self, :https, *([ :unsafe_inline ] if vite_dev)
-    policy.style_src   :self, :https, *([ :unsafe_inline ] if vite_dev)
+    policy.script_src  :self, :https, *([ :unsafe_inline ] if vite_dev), *vite_srcs
+    policy.style_src   :self, :https, *([ :unsafe_inline ] if vite_dev), *vite_srcs
     policy.connect_src :self, :https, *vite_ws_srcs
     policy.report_uri '/csp-violation-report-endpoint'
   end

@@ -12,6 +12,12 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
+  if Rails.env.development?
+    empty_source_map = proc { [ 200, { 'Content-Type' => 'application/json' }, [ '{"version":3,"sources":["installHook.js"],"mappings":""}' ] ] }
+    get 'installHook.js.map', to: empty_source_map
+    get '*path/installHook.js.map', to: empty_source_map
+  end
+
   constraints subdomain: 'demos' do
     get '/', to: 'demos#index'
     get '/page1', to: 'demos#page1'
