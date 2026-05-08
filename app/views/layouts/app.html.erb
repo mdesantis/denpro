@@ -21,7 +21,7 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= vite_tags "init_color_scheme_script.js", "app.js", "data-turbo-track": "reload", nonce: content_security_policy_nonce %>
+    <%= vite_tags "init_color_scheme_script.js", "app.css", "app.js", "data-turbo-track": "reload", nonce: content_security_policy_nonce %>
 
     <meta name="emotion-insertion-point" content="">
     <%= yield :ssr_emotion_styles %>
