@@ -31,8 +31,9 @@ ENV BUNDLE_DEPLOYMENT="1" \
     NODE_ENV="production" \
     NVM_DIR="/usr/local/nvm" \
     RACK_ENV="production" \
-    RAILS_ENV="production" \
-    VITE_RUBY_SSR_BUILD_ENABLED="true"
+    RAILS_ENV="production"
+
+
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
