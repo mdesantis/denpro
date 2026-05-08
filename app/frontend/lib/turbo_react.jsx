@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
+import createEmotionCache from '@/lib/create_emotion_cache'
 
 export default class TurboReact {
   constructor({ components, componentsRootDir = '' }) {
@@ -50,10 +51,10 @@ export default class TurboReact {
     let reactRoot
 
     if (rootElement.getAttribute('data-turbo-react-ssr')) {
-      reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} /></StrictMode>)
+      reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} emotionCache={createEmotionCache()} /></StrictMode>)
     } else {
       reactRoot = createRoot(rootElement)
-      reactRoot.render(<StrictMode><Component {...props} /></StrictMode>)
+      reactRoot.render(<StrictMode><Component {...props} emotionCache={createEmotionCache()} /></StrictMode>)
     }
 
     bodyElement.reactComponentRoots.push(reactRoot)

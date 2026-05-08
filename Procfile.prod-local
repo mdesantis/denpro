@@ -1,2 +1,1 @@
 web: env RAILS_ENV=production bin/rails s
-ssr: env NODE_ENV=production node public/vite-ssr/ssr.js

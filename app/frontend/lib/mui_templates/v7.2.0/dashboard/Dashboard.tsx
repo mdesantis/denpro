@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { CacheProvider } from '@emotion/react';
 import { EmotionCache } from '@emotion/cache';
-import createEmotionCache from '~/lib/create_emotion_cache';
+import createEmotionCache from '@/lib/create_emotion_cache';
 import type {} from '@mui/x-date-pickers/themeAugmentation';
 import type {} from '@mui/x-charts/themeAugmentation';
 import type {} from '@mui/x-data-grid-pro/themeAugmentation';

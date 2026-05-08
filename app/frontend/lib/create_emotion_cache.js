@@ -1,15 +1,28 @@
 import createCache from '@emotion/cache'
 
-// On the client side, Create a meta tag at the top of the <head> and set it as insertionPoint. This assures that
-// Material UI styles are loaded first. It allows developers to easily override Material UI styles with other styling
-// solutions, like CSS modules.
-export default function createEmotionCache() {
-  let insertionPoint;
+export default function createEmotionCache({ nonce } = {}) {
+  let insertionPoint
 
   if (!import.meta.env.SSR) {
-    const emotionInsertionPoint = document.querySelector('meta[name="emotion-insertion-point"]');
-    insertionPoint = emotionInsertionPoint ?? undefined;
+    const emotionInsertionPoint = document.querySelector('meta[name="emotion-insertion-point"]')
+    insertionPoint = emotionInsertionPoint ?? undefined
+
+    if (!nonce) {
+      if (typeof window !== 'undefined' && window.__CSP_NONCE__) {
+        nonce = window.__CSP_NONCE__
+      }
+
+      if (!nonce) {
+        const cspNonceMeta = document.querySelector('meta[name="csp-nonce"]')
+        nonce = cspNonceMeta?.getAttribute('content') ?? undefined
+      }
+
+      if (!nonce) {
+        const anyElementWithNonce = document.querySelector('[nonce]')
+        nonce = anyElementWithNonce?.getAttribute('nonce') ?? undefined
+      }
+    }
   }
 
-  return createCache({ key: 'denpro', insertionPoint });
+  return createCache({ key: 'denpro', insertionPoint, nonce })
 }

@@ -1,14 +1,6 @@
 {
   "private": true,
   "type": "module",
-  "devDependencies": {
-    "@types/morgan": "^1.9.10",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "vite": "^8.0.8",
-    "vite-plugin-rails": "^0.6.0",
-    "vite-plugin-ruby": "^5.2.1"
-  },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
@@ -23,10 +15,15 @@
     "@mui/x-date-pickers": "^8.27.2",
     "@mui/x-tree-view": "^8.27.2",
     "@react-spring/web": "^10.0.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "dayjs": "^1.11.20",
-    "express": "^5.2.1",
-    "morgan": "^1.10.1",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "vite-plugin-manifest-sri": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/react-dom": "^19.2.3",
+    "rails-vite-plugin": "^0.2.4",
+    "vite": "^8.0.11"
   }
 }

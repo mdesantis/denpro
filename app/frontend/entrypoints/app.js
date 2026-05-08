@@ -27,6 +27,6 @@
 // Example: Import a stylesheet in app/frontend/index.css
 // import '~/index.css'
 
-import '~/initializers/roboto_font'
-import '~/initializers/turbo_rails'
-import '~/initializers/turbo_react'
+import '@/initializers/roboto_font'
+import '@/initializers/turbo_rails'
+import '@/initializers/turbo_react'
