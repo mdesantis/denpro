@@ -33,8 +33,11 @@ module ReactComponentHelper
     bundle = find_bundle(:application)
 
     unless bundle.is_a?(SSR::Deno::Bundle)
-      logger.error '  SSR bundle not registered'
-      return
+      if Rails.env.production?
+        logger.error '  SSR bundle not registered'
+        return
+      end
+      raise 'SSR bundle not registered'
     end
 
     body = { name: name, props: props }
@@ -62,9 +65,11 @@ module ReactComponentHelper
     handle_ssr_runtime_error(error, name)
     nil
   rescue JSON::ParserError => error
-    logger.error "  SSR response parse error: #{error.message}"
-    raise error unless Rails.env.production?
-    nil
+    if Rails.env.production?
+      logger.error "  SSR response parse error: #{error.message}"
+      return
+    end
+    raise error
   end
 
   def handle_ssr_error(error_message, name)
@@ -76,7 +81,11 @@ module ReactComponentHelper
       end
       raise ComponentNotFound, "Component \"#{name}\" not found"
     else
-      logger.error "  SSR render error: #{error_message}"
+      if Rails.env.production?
+        logger.error "  SSR render error: #{error_message}"
+        return
+      end
+      raise StandardError, "SSR render error: #{error_message}"
     end
   end
 
@@ -109,8 +118,11 @@ module ReactComponentHelper
       return bundle
     end
 
-    logger.error "  SSR bundle #{name.inspect} file not found at #{bundle_path}"
-    nil
+    if Rails.env.production?
+      logger.error "  SSR bundle #{name.inspect} file not found at #{bundle_path}"
+      return
+    end
+    raise "SSR bundle #{name.inspect} file not found"
   end
 
   def bundle_path_for(name)
