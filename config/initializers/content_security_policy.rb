@@ -9,19 +9,8 @@ Rails.application.configure do
   # The extra sources and unsafe-inline are scoped here to avoid loosening production policy.
   vite_dev = Rails.env.development?
 
-  vite_srcs = vite_dev ? %w[
-    http://127.0.0.1:5173
-    http://localhost:5173
-    http://localhost.localdomain:5173
-    http://demos.localhost.localdomain:5173
-  ] : [].freeze
-
-  vite_ws_srcs = vite_dev ? %w[
-    ws://127.0.0.1:5173
-    ws://localhost:5173
-    ws://localhost.localdomain:5173
-    ws://demos.localhost.localdomain:5173
-  ] : [].freeze
+  vite_srcs = vite_dev ? %w[http://127.0.0.1:5173].freeze : [].freeze
+  vite_ws_srcs = vite_dev ? %w[ws://127.0.0.1:5173].freeze : [].freeze
 
   config.content_security_policy do |policy|
     policy.default_src :self, :https
@@ -32,6 +21,7 @@ Rails.application.configure do
     # These scripts cannot carry a nonce, so unsafe-inline is required.
     policy.script_src  :self, :https, *([ :unsafe_inline ] if vite_dev), *vite_srcs
     policy.style_src   :self, :https, *([ :unsafe_inline ] if vite_dev), *vite_srcs
+    policy.worker_src  :self, :blob
     policy.connect_src :self, :https, *vite_ws_srcs
     policy.report_uri '/csp-violation-report-endpoint'
   end
