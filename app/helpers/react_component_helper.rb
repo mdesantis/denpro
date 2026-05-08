@@ -32,14 +32,6 @@ module ReactComponentHelper
 
     bundle = find_bundle(:application)
 
-    unless bundle.is_a?(SSR::Deno::Bundle)
-      if Rails.env.production?
-        logger.error '  SSR bundle not registered'
-        return
-      end
-      raise 'SSR bundle not registered'
-    end
-
     body = { name: name, props: props }
     nonce = content_security_policy_nonce
     body[:nonce] = nonce if nonce.present?
@@ -61,7 +53,7 @@ module ReactComponentHelper
       emotion_styles: result['emotionStyles']
     }
   rescue SSR::Deno::RenderError, SSR::Deno::JsRuntimeWorkerError,
-         SSR::Deno::JsRuntimeOutOfMemoryError => error
+         SSR::Deno::JsRuntimeOutOfMemoryError, SSR::Deno::BundleNotFoundError => error
     handle_ssr_runtime_error(error, name)
     nil
   rescue JSON::ParserError => error
@@ -110,23 +102,7 @@ module ReactComponentHelper
       return SSR::Deno::Bundle.registry[name]
     end
 
-    bundle_path = bundle_path_for(name)
-    if bundle_path && File.exist?(bundle_path)
-      logger.warn "  SSR bundle #{name.inspect} not registered at boot. Registering late."
-      bundle = SSR::Deno::Bundle.new(bundle_path.to_s)
-      SSR::Deno::Bundle.registry[name] = bundle
-      return bundle
-    end
-
-    if Rails.env.production?
-      logger.error "  SSR bundle #{name.inspect} file not found at #{bundle_path}"
-      return
-    end
-    raise "SSR bundle #{name.inspect} file not found"
-  end
-
-  def bundle_path_for(name)
-    config = Rails.application.config.ssr_deno.bundles[name] if Rails.application.config.try(:ssr_deno)&.bundles
-    config || Rails.root.join('dist/server/ssr.js')
+    raise SSR::Deno::BundleNotFoundError,
+          "SSR bundle #{name.inspect} not registered"
   end
 end
