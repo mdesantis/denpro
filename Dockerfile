@@ -12,6 +12,7 @@
 ARG NVM_VERSION=0.40.4
 ARG NODE_VERSION=24.14.1
 
+# hadolint ignore=DL3007
 FROM ssr-deno-base:latest AS base
 
 # Rails app lives here
