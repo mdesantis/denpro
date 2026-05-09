@@ -8,8 +8,7 @@
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
-# Ruby version is determined by ssr-deno-poc base image (see .ruby-version for local dev)
-ARG NVM_VERSION=0.40.4
+# Ruby version is determined by ssr-deno-base image (see .ruby-version for local dev)
 ARG NODE_VERSION=24.14.1
 
 # hadolint ignore=DL3007
@@ -30,7 +29,6 @@ ENV BUNDLE_DEPLOYMENT="1" \
     BUNDLE_WITHOUT="development" \
     LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
     NODE_ENV="production" \
-    NVM_DIR="/usr/local/nvm" \
     RACK_ENV="production" \
     RAILS_ENV="production"
 
@@ -39,26 +37,15 @@ FROM base AS build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config libyaml-dev && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev pkg-config libyaml-dev xz-utils && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
-# Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV=/root/.bash_env
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# hadolint ignore=SC2016
-RUN touch "${BASH_ENV}" && \
-    echo '. "${BASH_ENV}"' >> ~/.bashrc
-
-# Download and install nvm
-ARG NVM_VERSION
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN mkdir "${NVM_DIR}" && \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v"${NVM_VERSION}"/install.sh | PROFILE="${BASH_ENV}" bash
-
+# Download and install Node.js from official binary distribution
 ARG NODE_VERSION
-SHELL ["/bin/bash", "-c"]
-RUN nvm install "${NODE_VERSION}" --default --save && \
-    nvm install-latest-npm
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+    | tar -xJ -C /usr/local --strip-components=1 && \
+    npm install -g npm@latest
 
 # Install application gems
 COPY vendor/* ./vendor/
@@ -96,7 +83,6 @@ USER runner:runner
 
 # Copy built artifacts: gems, application
 COPY --chown=runner:runner --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
-COPY --from=build "${NVM_DIR}" "${NVM_DIR}"
 COPY --chown=runner:runner --from=build /workdir /workdir
 
 # Entrypoint prepares the database.
