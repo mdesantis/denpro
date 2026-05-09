@@ -33,8 +33,6 @@ ENV BUNDLE_DEPLOYMENT="1" \
     RACK_ENV="production" \
     RAILS_ENV="production"
 
-
-
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
@@ -61,25 +59,24 @@ SHELL ["/bin/bash", "-c"]
 RUN nvm install "${NODE_VERSION}" --default --save && \
     nvm install-latest-npm
 
-# ssr-deno provided at /ssr-deno by base image (lib/ + .so + gemspec)
+# Install application gems
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
-RUN BUNDLE_DEPLOYMENT=0 bundle install && \
+RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
 # Copy application code
 COPY . .
 
-    # Precompile bootsnap code for faster boot times.
-    RUN BUNDLE_DEPLOYMENT=0 bundle exec bootsnap precompile app/ lib/
+# Precompile bootsnap code for faster boot times.
+RUN bundle exec bootsnap precompile app/ lib/
 
 # TODO: Post-SSR-migration — verify assets:precompile also builds SSR bundle
 # (npx vite build --ssr). rails_vite may or may not hook this automatically.
 # Test with: docker build . && check dist/server/ssr.js exists.
 # hadolint ignore=DL3059
-RUN BUNDLE_DEPLOYMENT=0 SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 # Final stage for app image
 FROM base
