@@ -514,11 +514,4 @@ Current Procfile.dev `web` process happens to build SSR before Rails starts (`np
 
 ## Remaining issues
 
-### R4: Production SSR bundle not built during assets:precompile
-**Severity: medium.** `./bin/rails assets:precompile` triggers `npx vite build` (client) via `rails_vite` railties hook, verified working in Docker. However, the SSR bundle (`dist/server/ssr.js`) is NOT built during this step. The `Dockerfile` has no `npx vite build --ssr` call.
-
-In development, this is handled by specific Procfile.dev and bin/dev steps. For production Docker builds, the SSR bundle must be built (or it crashes on first `react_component(ssr: true)`).
-
-Current Procfile.dev `web` process happens to build SSR before Rails starts (`npx vite build --ssr && bin/rails s`), but Docker build uses `assets:precompile` which skips this.
-
-**Fix needed:** Either `rails_vite` hooks into `assets:precompile` for SSR too (verify), or add explicit `npx vite build --ssr` to the Dockerfile before `assets:precompile`.
+Moved to `plans/docker-ssr-bundle.md`.
