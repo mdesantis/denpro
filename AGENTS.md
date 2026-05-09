@@ -1,3 +1,7 @@
+## Line Length
+
+Soft-wrap at 120 characters. All code and comments should be wrapped to stay within this limit.
+
 ## Archiving
 
 When user says "archive <file>":

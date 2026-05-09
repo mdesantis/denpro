@@ -12,11 +12,15 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
-  if Rails.env.development?
-    empty_source_map = proc { [ 200, { 'Content-Type' => 'application/json' }, [ '{"version":3,"sources":["installHook.js"],"mappings":""}' ] ] }
-    get 'installHook.js.map', to: empty_source_map
-    get '*path/installHook.js.map', to: empty_source_map
+  # Vite's React plugin injects installHook.js — the browser then requests installHook.js.map which reaches Rails
+  # instead of the Vite dev server. Making this unconditional avoids 404 source-map errors.
+  empty_source_map = proc do
+    [ 200, { 'Content-Type' => 'application/json' },
+     [ '{"version":3,"sources":["installHook.js"],"mappings":""}' ] ]
   end
+
+  get 'installHook.js.map', to: empty_source_map
+  get '*path/installHook.js.map', to: empty_source_map
 
   constraints subdomain: 'demos' do
     get '/', to: 'demos#index'
