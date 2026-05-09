@@ -86,7 +86,7 @@ COPY --chown=runner:runner --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --chown=runner:runner --from=build /workdir /workdir
 
 # Entrypoint prepares the database.
-ENTRYPOINT ["/workdir/bin/docker-entrypoint-rls"]
+ENTRYPOINT ["/workdir/bin/docker-entrypoint"]
 
 # Start server via Thruster by default, this can be overwritten at runtime
 EXPOSE 80

@@ -1,6 +1,0 @@
-#!/bin/bash -e
-
-# shellcheck source=/dev/null
-\. "$NVM_DIR/nvm.sh"
-
-exec "${@}"
