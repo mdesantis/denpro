@@ -82,6 +82,11 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
+# Deno extension JS/TS sources at /root/.cargo/ were baked into the native
+# extension at compile time — make them world-readable so the runner user can
+# access them at runtime.
+RUN chmod -R a+rX /root/
+
 ARG GID=10001
 ARG UID=10001
 RUN groupadd --system --gid "${GID}" runner && \
