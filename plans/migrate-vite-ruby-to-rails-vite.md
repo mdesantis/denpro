@@ -2,15 +2,15 @@
 
 ## What changes
 
-| Area | Current | Target |
-|------|---------|--------|
+| Area | Before | After |
+|------|--------|-------|
 | Ruby gems | `vite_ruby` + `vite_rails` + `httpx` | `rails_vite ~> 0.2.2` + `ssr-deno` (local path) |
-| npm packages | `vite-plugin-rails` + `vite-plugin-ruby` + `express` + `morgan` | `rails-vite-plugin` + `vite-plugin-manifest-sri` |
+| npm packages | `vite-plugin-rails` + `vite-plugin-ruby` + `express` + `morgan` | `rails-vite-plugin` + `vite` + `vite-plugin-manifest-sri` (all `dependencies`, not dev) |
 | Config | `config/vite.json` + vite.config.ts | vite.config.ts only |
 | Imports alias | `~` and `@` (both source dir) | `@` only (rails-vite-plugin default) |
 | SSR | Express Node server (separate OS process, HTTP POST) | `ssr-deno` gem (embedded V8 in Ruby process) |
 | View helpers | `vite_client_tag`, `vite_javascript_tag`, `vite_react_refresh_tag` | `vite_tags` (one call for JS + CSS + HMR) |
-| Dev processes | `web` + `vit` + `ssr` (3 proc) | `web` + `ssr` (2 proc) |
+| Dev processes | `web` + `vit` + `ssr` (3 proc) | `web` + `vite` + `ssr` (3 proc) |
 | SSR entry | `app/frontend/ssr_server.js` (Express app) | `app/frontend/entrypoints/ssr.jsx` (pure render fn) |
 | SSR target | default (Node) | `webworker` (Deno) |
 | SSR build output | `public/vite-ssr/` | `dist/server/` |
@@ -18,7 +18,16 @@
 ## Status: ✅ MIGRATION COMPLETE
 
 All 18 execution steps below have been implemented in commit `a1686b2`.
-See [Remaining issues](#remaining-issues) for post-migration cleanup items.
+Post-migration cleanup commits:
+- `a34c689` — remove stale vite_ruby boilerplate + Dockerfile env var
+- `1aace80` — add vite dev server process (`vite: npx vite`), fix CSP for all Vite hosts
+- `ac5088e` — add Vite hosts to script-src/style-src, silence installHook source map warning
+- `8a97e5b` — commit rule in AGENTS.md
+- `17fad8e` — allow blob workers in CSP via worker-src
+- `0e774de` — move vite + rails-vite-plugin to deps, drop NODE_ENV override in Docker
+- plus Docker build fixes (ssr-deno gem from base image, tzdata, BUNDLE_DEPLOYMENT=0)
+
+See [Remaining issues](#remaining-issues) for the one open item.
 
 ## Execution steps (ordered)
 
@@ -348,11 +357,12 @@ end
 ### 14. Procfile.dev — update ✅
 
 ```
-web: bin/rails s
+web: npx vite build --ssr && bin/rails s
+vite: npx vite
 ssr: npx vite build --ssr --watch
 ```
 
-Drop `vit: bin/vite dev` line.
+Drop `vit: bin/vite dev` line. Add `vite` process for HMR (added post-migration in `1aace80`).
 
 ### 15. Procfile.prod-local — update ✅
 
@@ -398,36 +408,7 @@ Remove: `vite_client_tag`, `vite_react_refresh_tag`, `vite_javascript_tag 'init_
 
 ### 17. config/initializers/content_security_policy.rb — rewrite ✅
 
-Uncomment and adapt from rails_demo:
-
-```ruby
-Rails.application.configure do
-  vite_dev = Rails.env.development?
-
-  config.content_security_policy do |policy|
-    policy.default_src :self, :https
-    policy.font_src    :self, :https, :data, *([ 'http://127.0.0.1:5173' ] if vite_dev)
-    policy.img_src     :self, :https, :data
-    policy.object_src  :none
-    policy.script_src  :self, :https, *([ :unsafe_inline ] if vite_dev)
-    policy.style_src   :self, :https, *([ :unsafe_inline ] if vite_dev)
-    policy.connect_src :self, :https, *([ 'ws://127.0.0.1:5173' ] if vite_dev)
-    # report_uri needs a route — remove or add endpoint
-    # policy.report_uri '/csp-violation-report-endpoint'
-  end
-
-  config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(32) }
-  config.content_security_policy_nonce_directives = vite_dev ? [] : [ 'script-src', 'style-src' ]
-  config.content_security_policy_nonce_auto = true
-end
-```
-
-**Key changes from current (commented-out) CSP:**
-- Vite dev mode needs `:unsafe_inline` for scripts/styles (HMR injection)
-- `ws://127.0.0.1:5173` for Vite HMR websocket
-- Nonce disabled in dev (browsers ignore `unsafe_inline` when nonce present)
-- Nonce generator uses `SecureRandom.base64(32)` instead of `request.session.id` (may be nil on first request)
-- `report_uri` commented out — no route exists for it
+Ported from rails_demo. Current file covers all Vite hosts for `script-src`, `style-src`, `font-src`, `connect-src`, plus `worker-src :self, :blob` and `report_uri`. See actual file for latest — it evolved post-migration to fix dev CSP errors.
 
 ### 18. Bulk rename `~/` → `@/` in frontend files ✅
 
@@ -470,16 +451,21 @@ bin/rails s                                 # ✅ server starts, vite_tags rende
 **Yes.** Layouts use `vite_tags` without separate `vite_client_tag` / `vite_react_refresh_tag` calls. Vite dev server handles HMR injection automatically.
 
 ### Q2: How does rails_vite start the Vite dev server?
-⚠️ **Not resolved.** Procfile.dev has only `web` and `ssr` (build watcher) — no `vite dev` process. `bin/dev` pre-builds the SSR bundle before launching Foreman. In dev, Vite doesn't serve assets via dev server; client assets are served from the last build output. **This means no HMR in development.** See [Remaining issues](#remaining-issues).
+**Resolved.** Procfile.dev has `vite: npx vite` process (added `1aace80`). HMR works in development. The Vite dev server runs on `http://127.0.0.1:5173`.
 
 ### Q3: CSP `report_uri` — keep or drop?
-**Dropped.** Not present in the final `content_security_policy.rb`.
+**Kept.** Present in the final `content_security_policy.rb` (from rails_demo port).
 
 ### Q4: `bin/vite` binstub?
 **Deleted.** `rails_vite` does not generate a `bin/vite` binstub. The `npx vite` CLI is used directly in Procfile.dev and bin/dev.
 
-### Q5: Procfile.dev — `ssr` process uses `npx vite build --ssr --watch`
-**Confirmed.** This builds the SSR bundle only. No `vite dev` process exists (see Q2). The two-process model works but lacks client-side HMR.
+### Q5: Procfile.dev — three processes
+```
+web: npx vite build --ssr && bin/rails s
+vite: npx vite
+ssr: npx vite build --ssr --watch
+```
+The `web` process pre-builds SSR synchronously (so ssr-deno finds bundle at boot), then starts Rails. `vite` serves HMR. `ssr` rebuilds SSR bundle on changes. `bin/dev` also pre-builds SSR before launching foreman (redundant with web proc but necessary — Rails boot requires bundle on disk).
 
 ### Q6: `config/deploy.yml` / Kamal — out of scope
 Still deferred.
@@ -489,26 +475,14 @@ Still deferred.
 
 ## Remaining issues
 
-### R1: Missing Vite dev server in development
-**Severity: medium.** Procfile.dev has no `vite dev` process. The `ssr` process runs `npx vite build --ssr --watch` which rebuilds the SSR bundle on changes but does NOT serve HMR for client assets. `bin/dev` pre-builds once before Foreman starts.
+### R4: Production SSR bundle not built during assets:precompile
+**Severity: medium.** `./bin/rails assets:precompile` triggers `npx vite build` (client) via `rails_vite` railties hook, verified working in Docker. However, the SSR bundle (`dist/server/ssr.js`) is NOT built during this step. The `Dockerfile` has no `npx vite build --ssr` call.
 
-Likely fix: add a `vite` process to Procfile.dev:
-```
-web: bin/rails s
-vite: npx vite
-ssr: npx vite build --ssr --watch
-```
+In development, this is handled by specific Procfile.dev and bin/dev steps. For production Docker builds, the SSR bundle must be built (or it crashes on first `react_component(ssr: true)`).
 
-This requires confirming `rails-vite-plugin` doesn't conflict with a separate `npx vite` dev server.
+Current Procfile.dev `web` process happens to build SSR before Rails starts (`npx vite build --ssr && bin/rails s`), but Docker build uses `assets:precompile` which skips this.
 
-### R2: Dockerfile has stale `VITE_RUBY_SSR_BUILD_ENABLED` env var
-**Severity: low.** `Dockerfile:36` still sets `VITE_RUBY_SSR_BUILD_ENABLED="true"` which is a `vite_ruby` env var. No effect on `rails_vite`, but misleading. Should be removed or replaced with equivalent `ssr-deno` env var if any.
-
-### R3: bin/prod-local — stale `--rm` line removed?
-Commit a1686b2 shows `Procfile.prod-local` had 1 line deleted (`ssr` proc). Current file has 1 line (just `web`). This is correct — ssr-deno runs in-process, no separate SSR server needed. Verify production-local workflow works end-to-end.
-
-### R4: Production asset pipeline — verify `assets:precompile`
-The `Dockerfile` runs `SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile`. Need to verify this works with `rails_vite` (it should trigger `npx vite build` via the railties hook). Also verify the SSR bundle is built during `assets:precompile` or needs a separate step.
+**Fix needed:** Either `rails_vite` hooks into `assets:precompile` for SSR too (verify), or add explicit `npx vite build --ssr` to the Dockerfile before `assets:precompile`.
 
 ## Key API differences (reference)
 
@@ -523,3 +497,28 @@ The `Dockerfile` runs `SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile`. N
 | SSR target | Node default | Deno (`webworker`) |
 | SSR output | `public/vite-ssr/` | `dist/server/` |
 | Alias | `~` → source dir | `@` → source dir |
+
+## Post-migration additions (beyond original 18 steps)
+
+| Change | Reason | Commit |
+|--------|--------|--------|
+| Move `rails-vite-plugin` + `vite` to `dependencies` | Docker `NODE_ENV=production` skips devDeps, breaks build | `0e774de` |
+| Docker: recreate ssr-deno gem from base image | Gemfile uses `path: '../ssr-deno'` — dir doesn't exist in Docker build context | inline in Dockerfile |
+| Docker: add `tzdata` package | Rails `assets:precompile` needs zoneinfo | inline in Dockerfile |
+| Docker: `BUNDLE_DEPLOYMENT=0` for build steps | Frozen mode rejects recreated ssr-deno gemspec | inline in Dockerfile |
+| CSP: add Vite hosts to `script-src` + `style-src`, simplify to `127.0.0.1:5173` | `@react-refresh` script blocked by CSP | `ac5088e` |
+| CSP: add `worker-src :self, :blob` | Blob URL workers blocked (e.g., MUI components) | `17fad8e` |
+| Routes: add `installHook.js.map` workaround | React DevTools injects sourceMappingURL comment | `ac5088e` |
+| Clean stale vite_ruby boilerplate comments | Misleading references in entrypoint files | `a34c689` |
+| Remove stale `VITE_RUBY_SSR_BUILD_ENABLED` env var | No effect on `rails_vite`, misleading | `a34c689` |
+
+## Remaining issues
+
+### R4: Production SSR bundle not built during assets:precompile
+**Severity: medium.** `./bin/rails assets:precompile` triggers `npx vite build` (client) via `rails_vite` railties hook, verified working in Docker. However, the SSR bundle (`dist/server/ssr.js`) is NOT built during this step. The `Dockerfile` has no `npx vite build --ssr` call.
+
+In development, this is handled by specific Procfile.dev and bin/dev steps. For production Docker builds, the SSR bundle must be built (or it crashes on first `react_component(ssr: true)`).
+
+Current Procfile.dev `web` process happens to build SSR before Rails starts (`npx vite build --ssr && bin/rails s`), but Docker build uses `assets:precompile` which skips this.
+
+**Fix needed:** Either `rails_vite` hooks into `assets:precompile` for SSR too (verify), or add explicit `npx vite build --ssr` to the Dockerfile before `assets:precompile`.
