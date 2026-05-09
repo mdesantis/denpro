@@ -67,8 +67,14 @@ RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile --gemfile
 
-# Copy application code
+# Install npm packages (cached separately from app code)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy application code and build Vite assets (client + SSR)
 COPY . .
+RUN npx vite build && \
+    npx vite build --ssr
 
 # Precompile bootsnap code for faster boot times.
 RUN bundle exec bootsnap precompile app/ lib/
@@ -81,8 +87,6 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 # Final stage for app image
 FROM base
-
-
 
 ARG GID=10001
 ARG UID=10001
