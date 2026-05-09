@@ -12,7 +12,7 @@
 ARG NVM_VERSION=0.40.4
 ARG NODE_VERSION=24.14.1
 
-FROM ssr-deno-poc:latest AS base
+FROM ssr-deno-base:latest AS base
 
 # Rails app lives here
 WORKDIR /workdir
@@ -61,10 +61,7 @@ SHELL ["/bin/bash", "-c"]
 RUN nvm install "${NODE_VERSION}" --default --save && \
     nvm install-latest-npm
 
-# Install application gems
-# ssr-deno is a path gem — recreate its structure from base image so bundle can resolve it
-RUN mkdir -p /ssr-deno/lib && cp -r /app/lib/ssr /ssr-deno/lib/ && \
-    ruby -e 'v = File.read("/ssr-deno/lib/ssr/deno/version.rb")[/VERSION = "(.+)"/, 1]; File.write("/ssr-deno/ssr-deno.gemspec", %Q[Gem::Specification.new do |s|\n  s.name = "ssr-deno"\n  s.version = "#{v}"\n  s.authors = ["dev"]\n  s.summary = "SSR via Deno"\n  s.files = Dir["lib/**/*"]\n  s.require_paths = ["lib"]\nend\n])'
+# ssr-deno provided at /ssr-deno by base image (lib/ + .so + gemspec)
 COPY vendor/* ./vendor/
 COPY Gemfile Gemfile.lock ./
 RUN BUNDLE_DEPLOYMENT=0 bundle install && \
