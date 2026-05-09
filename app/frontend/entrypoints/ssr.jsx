@@ -29,7 +29,10 @@ function render(argsJson) {
   )
 
   const emotionChunks = extractCriticalToChunks(content)
-  const emotionStyles = constructStyleTagsFromChunks(emotionChunks)
+  const emotionStyles = constructStyleTagsFromChunks(emotionChunks).replace(
+    /<style /g,
+    '<style data-turbo-track="reload" '
+  )
 
   return { content, emotionStyles }
 }
