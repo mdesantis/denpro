@@ -2,7 +2,7 @@
 
 Findings from compose.yml + Dockerfile review.
 
-## Status: ◐ IN PROGRESS
+## Status: ✅ COMPLETE
 
 Steps completed: 1 (audit), 4 (ssr removal).  
 Remaining: 2, 3, 6, 7.
