@@ -20,13 +20,14 @@ services:
     expose:
       - 15432
     healthcheck:
-      test: ["CMD", "pg_isready", "--username", "denpro"]
+      test: ["CMD", "pg_isready", "--host", "localhost", "--port", "15432", "--username", "denpro"]
       interval: 10s
       timeout: 5s
       retries: 3
   rls:
     build:
       context: .
+    restart: unless-stopped
     depends_on:
       pgl:
         condition: service_healthy
