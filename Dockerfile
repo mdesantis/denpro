@@ -72,6 +72,9 @@ RUN bundle exec bootsnap precompile app/ lib/
 # hadolint ignore=DL3059
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
+# Strip build-only artifacts before copying to final stage
+RUN rm -rf node_modules
+
 # Final stage for app image
 FROM base
 
