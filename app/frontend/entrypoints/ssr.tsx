@@ -3,10 +3,10 @@ import { renderToString } from 'react-dom/server'
 import createEmotionCache from '@/lib/create_emotion_cache'
 import createEmotionServer from '@emotion/server/create-instance'
 
-const components = import.meta.glob('@/components/**/*.{j,t}sx', { eager: true })
+const components: Record<string, { default: React.ComponentType<any> }> = import.meta.glob('@/components/**/*.{j,t}sx', { eager: true })
 
-function render(argsJson) {
-  const { name, props = {}, nonce } = JSON.parse(argsJson)
+function render(argsJson: string): { content: string; emotionStyles: string } | { error: string } {
+  const { name, props = {}, nonce }: { name?: string; props?: Record<string, unknown>; nonce?: string } = JSON.parse(argsJson)
 
   if (!name) {
     return { error: 'Component name must be provided' }

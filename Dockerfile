@@ -61,7 +61,8 @@ RUN npm ci
 # Copy application code and build Vite assets (client + SSR)
 COPY . .
 RUN npx vite build && \
-    npx vite build --ssr
+    npx vite build --ssr && \
+    rm -rf node_modules
 
 # Precompile bootsnap code for faster boot times.
 RUN bundle exec bootsnap precompile app/ lib/
@@ -71,9 +72,6 @@ RUN bundle exec bootsnap precompile app/ lib/
 # Test with: docker build . && check dist/server/ssr.js exists.
 # hadolint ignore=DL3059
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
-
-# Strip build-only artifacts before copying to final stage
-RUN rm -rf node_modules
 
 # Final stage for app image
 FROM base

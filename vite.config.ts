@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     rails({
       sourceDir,
-      ssr: 'entrypoints/ssr.jsx',
+      ssr: 'entrypoints/ssr.tsx',
       ssrOutDir: 'dist/server',
     }),
   ],

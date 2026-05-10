@@ -1,10 +1,10 @@
 import createCache from '@emotion/cache'
 
-export default function createEmotionCache({ nonce } = {}) {
-  let insertionPoint
+export default function createEmotionCache({ nonce }: { nonce?: string } = {}): ReturnType<typeof createCache> {
+  let insertionPoint: HTMLElement | undefined
 
   if (!import.meta.env.SSR) {
-    const emotionInsertionPoint = document.querySelector('meta[name="emotion-insertion-point"]')
+    const emotionInsertionPoint = document.querySelector<HTMLElement>('meta[name="emotion-insertion-point"]')
     insertionPoint = emotionInsertionPoint ?? undefined
 
     if (!nonce) {
