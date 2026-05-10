@@ -1,7 +1,7 @@
 PATH
   remote: ../ssr-deno
   specs:
-    ssr-deno (0.1.0.pre.alpha.5)
+    ssr-deno (0.1.0.pre.alpha.6)
       rb_sys (~> 0.9)
 
 GEM
