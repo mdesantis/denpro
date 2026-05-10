@@ -1,7 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
-import createEmotionCache from '@/lib/create_emotion_cache'
-import type { EmotionCache } from '@emotion/cache'
 
 interface BodyWithReactRoots extends HTMLBodyElement {
   reactComponentRoots?: Array<{ unmount: () => void }>
@@ -10,12 +8,10 @@ interface BodyWithReactRoots extends HTMLBodyElement {
 export default class TurboReact {
   components: Record<string, any>
   componentsRootDir: string
-  emotionCache: EmotionCache
 
   constructor({ components, componentsRootDir = '' }: { components: Record<string, any>; componentsRootDir?: string }) {
     this.componentsRootDir = componentsRootDir
     this.components = components
-    this.emotionCache = createEmotionCache()
   }
 
   start(): void {
@@ -65,13 +61,13 @@ export default class TurboReact {
     const Component: React.ComponentType<any> = (await lazyComponentModule()).default
 
     if (rootElement.getAttribute('data-turbo-react-ssr')) {
-      const reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} emotionCache={this.emotionCache} /></StrictMode>)
+      const reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} /></StrictMode>)
 
       bodyElement.reactComponentRoots!.push(reactRoot)
     } else {
       const reactRoot = createRoot(rootElement)
 
-      reactRoot.render(<StrictMode><Component {...props} emotionCache={this.emotionCache} /></StrictMode>)
+      reactRoot.render(<StrictMode><Component {...props} /></StrictMode>)
       bodyElement.reactComponentRoots!.push(reactRoot)
     }
   }
