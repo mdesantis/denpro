@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import createEmotionCache from '@/lib/create_emotion_cache'
+import type { EmotionCache } from '@emotion/cache'
 
 interface BodyWithReactRoots extends HTMLBodyElement {
   reactComponentRoots?: Array<{ unmount: () => void }>
@@ -9,10 +10,12 @@ interface BodyWithReactRoots extends HTMLBodyElement {
 export default class TurboReact {
   components: Record<string, any>
   componentsRootDir: string
+  emotionCache: EmotionCache
 
   constructor({ components, componentsRootDir = '' }: { components: Record<string, any>; componentsRootDir?: string }) {
     this.componentsRootDir = componentsRootDir
     this.components = components
+    this.emotionCache = createEmotionCache()
   }
 
   start(): void {
@@ -43,30 +46,38 @@ export default class TurboReact {
 
   async mountComponent(rootElement: HTMLElement, bodyElement: BodyWithReactRoots): Promise<void> {
     const name = rootElement.getAttribute('data-react-component-name')
+
+    if (!name) {
+      throw new Error('[TurboReact] Missing data-react-component-name attribute')
+    }
+
     const rawProps = rootElement.getAttribute('data-react-component-props')
     const props: Record<string, unknown> = JSON.parse(rawProps!)
-    const lazyComponentModule = this.components[`${this.componentsRootDir}/components/${name}.jsx`] ?? this.components[`${this.componentsRootDir}/components/${name}.tsx`]
+    const extensions = ['.jsx', '.tsx', '.js', '.ts']
+    const lazyComponentModule = extensions.reduce((found, ext) => {
+      return found ?? this.components[`${this.componentsRootDir}/components/${name}${ext}`]
+    }, undefined as any)
 
-    if(!lazyComponentModule || !name) {
+    if (!lazyComponentModule) {
       throw new Error(`[TurboReact] Missing component with name: "${name}"`)
     }
 
     const Component: React.ComponentType<any> = (await lazyComponentModule()).default
 
-    let reactRoot: ReturnType<typeof createRoot>
-
     if (rootElement.getAttribute('data-turbo-react-ssr')) {
-      reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} emotionCache={createEmotionCache()} /></StrictMode>)
-    } else {
-      reactRoot = createRoot(rootElement)
-      reactRoot.render(<StrictMode><Component {...props} emotionCache={createEmotionCache()} /></StrictMode>)
-    }
+      const reactRoot = hydrateRoot(rootElement, <StrictMode><Component {...props} emotionCache={this.emotionCache} /></StrictMode>)
 
-    bodyElement.reactComponentRoots!.push(reactRoot)
+      bodyElement.reactComponentRoots!.push(reactRoot)
+    } else {
+      const reactRoot = createRoot(rootElement)
+
+      reactRoot.render(<StrictMode><Component {...props} emotionCache={this.emotionCache} /></StrictMode>)
+      bodyElement.reactComponentRoots!.push(reactRoot)
+    }
   }
 
   turboReactBeforeRender(event: TurboBeforeRenderEvent): void {
-    event.detail.render = this.turboReactRenderFn(event).bind(this)
+    event.detail.render = this.turboReactRenderFn(event)
   }
 
   turboReactRenderFn(_event: TurboBeforeRenderEvent): (currentBodyElement: Element, newBodyElement: Element) => Promise<void> {
