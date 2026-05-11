@@ -25,6 +25,7 @@ services:
       timeout: 5s
       retries: 3
   rls:
+    platform: linux/amd64
     build:
       context: .
     restart: unless-stopped
