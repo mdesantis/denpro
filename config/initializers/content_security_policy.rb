@@ -27,11 +27,6 @@ rescue Errno::ENOENT
   '*{-webkit-transition:none!important;-moz-transition:none!important;-o-transition:none!important;-ms-transition:none!important;transition:none!important}'
 end
 
-# Another inline <style> element injected client-side (origin unconfirmed —
-# likely from Turbo or React runtime). Its content is unknown so the hash
-# is kept here as produced by the browser's CSP violation report.
-UNKNOWN_CLIENT_STYLE_HASH = "'sha256-TXDWARBaFnCNmRzS8aNyAEPcjpFpZL0eb//LegI7I7M='"
-
 if Rails.env.production?
   Rails.application.configure do
     config.content_security_policy do |policy|
@@ -45,10 +40,10 @@ if Rails.env.production?
       policy.style_src_attr :unsafe_inline
       # style-src: hashes whitelist known raw <style> injections (bypass Emotion
       # cache so no nonce). Nonces cover Emotion-generated <style> elements.
-      policy.style_src     :self, :https, style_hash(MUI_DISABLE_CSS_TRANSITION), UNKNOWN_CLIENT_STYLE_HASH
+      policy.style_src     :self, :https, :report_sample, style_hash(MUI_DISABLE_CSS_TRANSITION)
       policy.worker_src    :self, :blob
       policy.connect_src   :self, :https
-      policy.report_uri    '/csp-violation-report-endpoint'
+      policy.report_uri    '/csp-violation-reports'
     end
 
     config.content_security_policy_nonce_generator = ->(request) { SecureRandom.base64(32) }
@@ -65,10 +60,11 @@ else
       policy.img_src     :self, :https, :data
       policy.object_src  :none
       policy.script_src  :self, :https, :unsafe_inline, 'http://127.0.0.1:5173'
+      policy.style_src_attr :unsafe_inline
       policy.style_src   :self, :https, :unsafe_inline, 'http://127.0.0.1:5173'
       policy.worker_src  :self, :blob
       policy.connect_src :self, :https, 'ws://127.0.0.1:5173'
-      policy.report_uri '/csp-violation-report-endpoint'
+      policy.report_uri '/csp-violation-reports'
     end
 
     # Nonce omitted in dev — a nonce directive causes browsers to ignore unsafe-inline (per CSP spec)

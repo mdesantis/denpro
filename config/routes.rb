@@ -22,6 +22,8 @@ Rails.application.routes.draw do
   get 'installHook.js.map', to: empty_source_map
   get '*path/installHook.js.map', to: empty_source_map
 
+  resources :csp_violation_reports, only: :create, path: 'csp-violation-reports'
+
   constraints subdomain: 'demos' do
     get '/', to: 'demos#index'
     get '/page1', to: 'demos#page1'

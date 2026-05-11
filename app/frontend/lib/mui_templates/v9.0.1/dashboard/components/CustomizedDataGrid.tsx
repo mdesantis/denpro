@@ -4,6 +4,7 @@ import { columns, rows } from '../internals/data/gridData';
 export default function CustomizedDataGrid() {
   return (
     <DataGrid
+      nonce={!import.meta.env.SSR ? window.__CSP_NONCE__ : undefined}
       checkboxSelection
       rows={rows}
       columns={columns}
