@@ -21,7 +21,8 @@ export default defineConfig({
     __VITE_SOURCE_DIR__: JSON.stringify(`/${sourceDir}`)
   },
   build: {
-    sourcemap: disableSri ? true : 'hidden'
+    sourcemap: disableSri ? true : 'hidden',
+    emptyOutDir: false, // multiple SSR builds share dist/server; don't wipe each other
   },
   ssr: {
     target: 'webworker',
@@ -32,6 +33,9 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      ignored: ['**/tmp/**', '**/log/**', '**/public/vite/**', '**/node_modules/**'],
+    },
     allowedHosts: [
       '.localhost.localdomain'
     ],

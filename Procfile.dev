@@ -1,3 +1,4 @@
-web: npx vite build --ssr && bin/rails s
+web: bin/rails s
 vite: npx vite
-ssr: npx vite build --ssr --watch
+ssr-app: npx vite build --ssr app/frontend/entrypoints/ssr-app.tsx --watch
+ssr-demos: npx vite build --ssr app/frontend/entrypoints/ssr-demos.tsx --watch

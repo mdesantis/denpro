@@ -1,12 +1,12 @@
 module ReactComponentHelper
   class ComponentNotFound < StandardError; end
 
-  def react_component(name, props: {}, ssr: false)
+  def react_component(name, props: {}, ssr: false, bundle: nil)
     ssr = false if turbo_drive?
     content = nil
 
     if ssr
-      result = perform_ssr(name, props)
+      result = perform_ssr(name, props, bundle:)
 
       if result
         content = result[:content]&.html_safe
@@ -24,7 +24,7 @@ module ReactComponentHelper
 
   private
 
-  def perform_ssr(name, props)
+  def perform_ssr(name, props, bundle: nil)
     logger.info "  Starting SSR request for React component #{name.inspect}"
     logger.info "    Props: #{props.inspect}" if props.present?
 
@@ -32,7 +32,7 @@ module ReactComponentHelper
     nonce = content_security_policy_nonce
     body[:nonce] = nonce if nonce.present?
 
-    result = ssr_render(body, bundle: :application)
+    result = ssr_render(body, bundle: bundle.presence || :application)
 
     return unless result.is_a?(Hash)
 

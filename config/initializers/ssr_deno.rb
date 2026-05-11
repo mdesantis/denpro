@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 Rails.application.config.ssr_deno.bundles = {
-  application: Rails.root.join('dist/server/ssr.js')
+  app: Rails.root.join('dist/server/ssr-app.js'),
+  demos: Rails.root.join('dist/server/ssr-demos.js')
 }
 
 Rails.application.config.ssr_deno.node_builtins_enabled = true
