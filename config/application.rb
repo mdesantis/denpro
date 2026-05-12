@@ -16,7 +16,7 @@ module DenPro
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks app/frontend])
 
-    config.x.vite.dev_host = ENV.fetch('VITE_DEV_HOST')
+    config.x.vite.dev_host = ENV.fetch('VITE_DEV_HOST', 'localhost')
 
     # Configuration for the application, engines, and railties goes here.
     #
