@@ -7,8 +7,9 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
-/.env*
+# Ignore local environment overrides (dotenv convention)
+/.env.local
+/.env.*.local
 
 # Ignore all logfiles and tempfiles.
 /log/*

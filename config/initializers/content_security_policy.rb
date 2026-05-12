@@ -56,14 +56,15 @@ else
   Rails.application.configure do
     config.content_security_policy do |policy|
       policy.default_src :self, :https
-      policy.font_src    :self, :https, :data, 'http://127.0.0.1:5173'
+      vite_host = Rails.application.config.x.vite.dev_host
+      policy.font_src    :self, :https, :data, "http://#{vite_host}:5173"
       policy.img_src     :self, :https, :data
       policy.object_src  :none
-      policy.script_src  :self, :https, :unsafe_inline, 'http://127.0.0.1:5173'
+      policy.script_src  :self, :https, :unsafe_inline, "http://#{vite_host}:5173"
       policy.style_src_attr :unsafe_inline
-      policy.style_src   :self, :https, :unsafe_inline, 'http://127.0.0.1:5173'
+      policy.style_src   :self, :https, :unsafe_inline, "http://#{vite_host}:5173"
       policy.worker_src  :self, :blob
-      policy.connect_src :self, :https, 'ws://127.0.0.1:5173'
+      policy.connect_src :self, :https, "ws://#{vite_host}:5173"
       policy.report_uri '/csp-violation-reports'
     end
 

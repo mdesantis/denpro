@@ -36,7 +36,7 @@ export default defineConfig({
     watch: {
       ignored: ['**/tmp/**', '**/log/**', '**/public/vite/**', '**/node_modules/**'],
     },
-    host: '127.0.0.1',
+    host: process.env.VITE_DEV_HOST || '127.0.0.1',
     allowedHosts: [
       '.localhost.localdomain'
     ],
