@@ -1,6 +1,8 @@
-/// <reference types="vite/client" />
-
 declare const __VITE_SOURCE_DIR__: string
+
+interface ImportMeta {
+  glob(pattern: string, options?: { eager?: boolean }): Record<string, any>
+}
 
 interface Window {
   __CSP_NONCE__?: string

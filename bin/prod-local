@@ -7,7 +7,7 @@ export RAILS_ENV=production
 export NODE_ENV=production
 
 VITE_DISABLE_SRI="${VITE_DISABLE_SRI:-}" npx vite build
-VITE_DISABLE_SRI="${VITE_DISABLE_SRI:-}" npx vite build --ssr
+npx rolldown -c rolldown.ssr.ts
 
 if command -v overmind 1> /dev/null 2>&1
 then

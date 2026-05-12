@@ -12,11 +12,11 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "types": ["vite/client"],
-    "paths": {
-      "@/*": ["./app/frontend/*"]
-    }
-  },
-  "include": ["app/frontend/**/*", "vite.config.ts"],
+"types": ["node"],
+  "paths": {
+    "@/*": ["./app/frontend/*"]
+  }
+},
+  "include": ["app/frontend/**/*", "vite.config.ts", "rolldown.ssr.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "app/frontend/lib/mui_templates"]
 }

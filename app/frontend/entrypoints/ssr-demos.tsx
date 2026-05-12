@@ -2,8 +2,9 @@ import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import createEmotionCache from '@/lib/create_emotion_cache'
 import createEmotionServer from '@emotion/server/create-instance'
+import { __ssrComponentsDemos } from './__ssr_imports__'
 
-const components: Record<string, { default: React.ComponentType<any> }> = import.meta.glob('@/components/demos/**/*.{j,t}sx', { eager: true })
+const components = __ssrComponentsDemos
 
 function render(argsJson: string): { content: string; emotionStyles: string } | { error: string } {
   const { name, props = {}, nonce }: { name?: string; props?: Record<string, unknown>; nonce?: string } = JSON.parse(argsJson)

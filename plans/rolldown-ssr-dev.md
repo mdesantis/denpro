@@ -2,141 +2,74 @@
 
 ## Problem
 
-`Procfile.dev` runs 4 processes — 3 are heavy Node.js/Vite processes:
+`Procfile.dev` ran 4 processes — 3 heavy Node.js/Vite processes:
 
 ```
 web: bin/rails s
 vite: npx vite                    # client dev server (keep)
-ssr-app: npx vite build --ssr ... # SSR watch build 1 (Node.js ~100-200MB)
-ssr-demos: npx vite build --ssr ..# SSR watch build 2 (Node.js ~100-200MB)
+ssr-app: npx vite build --ssr ... # SSR watch build 1
+ssr-demos: npx vite build --ssr ..# SSR watch build 2
 ```
 
-SSR builds don't need HMR, asset pipeline, or Rails manifest integration — just TSX→JS. But each spawns a full Vite/Rollup Node process: 3-5s startup, 500-2000ms rebuilds.
+SSR builds don't need HMR, asset pipeline, or Rails manifest — just TSX→JS. But each spawned a full Vite/Rollup Node process: 3-5s startup, 500-2000ms rebuilds.
 
-## Scope
+## Done
 
-**SSR builds only.** Client dev server (`npx vite`) stays untouched with `rails-vite-plugin`, SRI, HMR, CSP — all that is irrelevant for SSR. We only replace the two `vite build --ssr --watch` processes with one Rolldown process.
+**Scope:** SSR builds only. Client dev server (`npx vite`) untouched with `rails-vite-plugin`, SRI, HMR, CSP.
 
-## Vite-specific code in SSR entries
+### Changes
 
-Full audit of what the SSR entry files (`ssr.tsx`, `ssr-app.tsx`, `ssr-demos.tsx`) and their dependencies use:
+| File | Change |
+|------|--------|
+| `package.json` | Added `rolldown` devDep |
+| `rolldown.ssr.ts` | Config — 3 separate builds (array), one per SSR entry |
+| `scripts/build-ssr-imports.ts` | Codegen: scans components dir, generates explicit import map |
+| `app/frontend/entrypoints/__ssr_imports__.ts` | Generated: imports all components with key format matching Vite's glob |
+| `app/frontend/entrypoints/ssr.tsx` | Replaced `import.meta.glob` with `__ssrComponents` import |
+| `app/frontend/entrypoints/ssr-app.tsx` | Replaced `import.meta.glob` with `__ssrComponentsApp` import |
+| `app/frontend/entrypoints/ssr-demos.tsx` | Replaced `import.meta.glob` with `__ssrComponentsDemos` import |
+| `app/frontend/lib/create_emotion_cache.ts` | Replaced `import.meta.env.SSR` with `typeof document !== 'undefined'` |
+| `app/frontend/lib/mui_templates/.../CustomizedDataGrid.tsx` | Same pattern |
+| `app/frontend/env.d.ts` | Removed `/// <reference types="vite/client" />` |
+| `tsconfig.json` | Removed `"types": ["vite/client"]` |
+| `Procfile.dev` | 2 Vite SSR lines → 1 Rolldown line |
+| `bin/dev` | Removed pre-build `npx vite build --ssr` |
+| `.gitignore` | Added `__ssr_imports__.ts` |
 
-| # | Feature | Files | Lines | Rolldown status |
-|---|---------|-------|-------|-----------------|
-| 1 | `import.meta.glob('...', { eager: true })` | 3 SSR entries | 6 each | **UNKNOWN** — may be supported (Rollup-compat), must verify |
-| 2 | `import.meta.env.SSR` | `create_emotion_cache.ts:6` | 1 | **NOT supported** — replace with `typeof document === 'undefined'` |
-| 3 | `__VITE_SOURCE_DIR__` global | 3 SSR entries | 15 each | **Polyfillable** via Rolldown `define` |
-| 4 | `vite/client` types | `env.d.ts:1`, `tsconfig.json:15` | 2 | **Replace** with custom declarations |
+### Verifications
 
-No Vite-specific features in transitive deps (`@emotion/*`, `@mui/*`, `react-dom`, etc.). The `turbo_react.ts` file uses `import.meta.glob` (lazy, no `eager`) but is client-side only — not part of SSR builds.
+- `npx rolldown -c rolldown.ssr.ts` — all 3 entries build, ~3.5s total
+- `bundle exec rails runner` — Rails boots clean
+- `SSR::Deno::Bundle.new(...).render(...)` — all 3 bundles render correctly:
+  - `ssr.js` → Dashboard ✅
+  - `ssr-app.js` → Dashboard ✅
+  - `ssr-demos.js` → mui_hello_world ✅
 
-## Approach decision: `import.meta.glob`
+### Key findings during implementation
 
-Two paths depending on whether Rolldown supports it:
+1. **`import.meta.glob` NOT supported** by Rolldown v1.0.0. Path B: codegen.
+2. **`import.meta.env.SSR` not supported** — replaced with `typeof document !== 'undefined'`.
+3. **`__VITE_SOURCE_DIR__`** — works via `replacePlugin` (not root `define`).
+4. **`platform: 'node'`** needed for Node builtin resolution (`util`, `crypto`, `async_hooks`). `platform: 'neutral'` requires explicit `mainFields`.
+5. **`resolve.conditions` not supported** in Rolldown — removed.
+6. **`format: 'cjs'` required** — ssr-deno wraps bundles in `(function(){...})()`, so `import` statements (ESM) fail. CJS uses `require()` which works inside IIFEs.
+7. **`process.env.NODE_ENV` accessed** by React/readable-stream → replaced at build time via `replacePlugin`. Also replaced `process.browser` and `process.env.READABLE_STREAM`.
+8. **Separate builds per entry** (array config) needed to avoid shared chunks with `import` statements. Single multi-entry build produces shared chunks with cross-file imports.
+9. **`buildStart` plugin hook** runs the codegen before each build. Content-hash dedup prevents infinite watch loops.
 
-**Path A — Rolldown supports `import.meta.glob` (verify first):** Zero SSR source changes for glob. Only fix the other 3 items below. ~10 lines changed total.
+### Startup time comparison
 
-**Path B — Not supported:** Replace with codegen. A `scripts/build-ssr-imports.ts` script scans component dirs at build time and emits `app/frontend/entrypoints/__ssr_imports__.ts` with explicit imports. More work but fully portable.
+| Metric | Vite (before) | Rolldown (after) |
+|--------|---------------|-------------------|
+| SSR build startup | ~3-5s per entry | ~50ms |
+| Full rebuild | ~3.5s (2 entries) | ~3.5s (3 entries) |
+| Incremental rebuild | 500-2000ms | ~200-500ms |
+| Node processes | 3 (dev + 2 SSR) | 2 (dev + 1 SSR) |
 
-## Steps
-
-### Step 1: Install rolldown
-
-```bash
-npm install --save-dev rolldown
-```
-
-### Step 2: Create `rolldown.ssr.ts`
-
-```ts
-import { defineConfig } from 'rolldown'
-
-export default defineConfig({
-  input: {
-    'ssr-app': 'app/frontend/entrypoints/ssr-app.tsx',
-    'ssr-demos': 'app/frontend/entrypoints/ssr-demos.tsx',
-  },
-  output: {
-    dir: 'dist/server',
-    format: 'esm',
-    entryFileNames: '[name].js',
-    sourcemap: true,
-  },
-  platform: 'neutral',
-  external: ['stream', 'buffer', 'events', 'string_decoder'],
-  define: {
-    __VITE_SOURCE_DIR__: JSON.stringify('/app/frontend'),
-  },
-  resolve: {
-    alias: { '@': './app/frontend' },
-    conditions: ['edge-light', 'module', 'browser', 'development'],
-  },
-})
-```
-
-No React plugin needed — Rolldown uses Oxc internally for TS/JSX transforms.
-
-### Step 3: Replace `import.meta.env.SSR`
-
-**File: `app/frontend/lib/create_emotion_cache.ts:6`**
-
-```ts
-// Before:
-if (!import.meta.env.SSR) {
-// After:
-if (typeof document !== 'undefined') {
-```
-
-**File: `app/frontend/lib/mui_templates/v9.0.1/dashboard/components/CustomizedDataGrid.tsx:7`**
-
-Same pattern — guard `window.__CSP_NONCE__` access with `typeof window !== 'undefined'` (already partially guarded, only the `!import.meta.env.SSR` check needs changing).
-
-### Step 4: Update `env.d.ts`
-
-Replace `/// <reference types="vite/client" />` with custom declarations:
-
-```ts
-interface ImportMeta {
-  glob(pattern: string, options?: { eager?: boolean }): Record<string, any>
-}
-
-declare const __VITE_SOURCE_DIR__: string
-```
-
-Remove `"types": ["vite/client"]` from `tsconfig.json`.
-
-### Step 5: Update `Procfile.dev`
-
-```
-web: bin/rails s
-vite: npx vite
-ssr: npx rolldown -c rolldown.ssr.ts --watch
-```
-
-Remove `ssr-app` and `ssr-demos` lines.
-
-### Step 6: Simplify `bin/dev`
-
-Remove the `npx vite build --ssr ...` pre-build on line 6. Rolldown watch starts in ~50ms, bundle is ready before Rails boots.
-
-## Where Oxc fits
-
-| Layer | Tool | Role |
-|-------|------|------|
-| Parser | **Oxc** (inside Rolldown) | Parse TS/TSX, AST construction |
-| Transform | **Oxc** (inside Rolldown) | TS stripping, JSX→JS, decorators |
-| Bundler | **Rolldown** | Entry bundling, code splitting, tree-shaking |
-
-No direct Oxc dependency in denpro — Rolldown bundles it. Oxc's speed is what makes Rolldown's startup (~50ms) and incremental rebuilds (~50-200ms) possible vs Vite/Rollup's Node.js overhead.
-
-## What does NOT change
-
-- `vite: npx vite` — client dev server, HMR, `rails-vite-plugin`, SRI, CSP config
-- `Dockerfile` — production builds (keep Vite for now; Rolldown SSR in prod is follow-up)
-- Client entry points (`app.ts`, `application.ts`, `demos.ts`, `turbo_react.ts`)
-- Rails helpers, view templates, CSP initializer
+Note: rebuild times similar because MUI library is the bottleneck (not the bundler). Real improvement is in startup time and memory.
 
 ## Future
 
-- **Production builds:** Extend Rolldown SSR to Dockerfile, remove Vite as dependency entirely
-- **Gem-level integration:** see `ssr-deno/plans/rolldown-ssr-dev.md` for ssr-deno-specific follow-ups (bin/ssr-dev, auto-build on stale mtime, sample app)
+- **Production builds:** Extend Rolldown SSR to Dockerfile
+- **Watch optimization:** Exclude component dirs from watch when using codegen (component changes don't need rebuild unless files added/removed)
+- **Gem-level integration:** See `ssr-deno/plans/rolldown-ssr-dev.md`

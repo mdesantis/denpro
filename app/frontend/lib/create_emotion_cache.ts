@@ -1,14 +1,15 @@
 import createCache from '@emotion/cache'
+import { isBrowser } from '@/lib/utils'
 
 export default function createEmotionCache({ nonce }: { nonce?: string } = {}): ReturnType<typeof createCache> {
   let insertionPoint: HTMLElement | undefined
 
-  if (!import.meta.env.SSR) {
+  if (isBrowser()) {
     const emotionInsertionPoint = document.querySelector<HTMLElement>('meta[name="emotion-insertion-point"]')
     insertionPoint = emotionInsertionPoint ?? undefined
 
     if (!nonce) {
-      if (typeof window !== 'undefined' && window.__CSP_NONCE__) {
+      if (window.__CSP_NONCE__) {
         nonce = window.__CSP_NONCE__
       }
 

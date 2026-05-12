@@ -2,8 +2,8 @@
 
 export PORT="${PORT:-3000}"
 
-# Pre-build SSR bundle so ssr-deno railtie finds it at boot
-npx vite build --ssr app/frontend/entrypoints/ssr.jsx --outDir dist/server --logLevel warn
+# Pre-build SSR bundles so ssr-deno finds them at boot
+npx rolldown -c rolldown.ssr.ts
 
 if command -v overmind 1> /dev/null 2>&1
 then

@@ -1,10 +1,11 @@
 import { DataGrid } from '@mui/x-data-grid';
 import { columns, rows } from '../internals/data/gridData';
+import { isBrowser } from '@/lib/utils';
 
 export default function CustomizedDataGrid() {
   return (
     <DataGrid
-      nonce={!import.meta.env.SSR ? window.__CSP_NONCE__ : undefined}
+      nonce={isBrowser() ? window.__CSP_NONCE__ : undefined}
       checkboxSelection
       rows={rows}
       columns={columns}
