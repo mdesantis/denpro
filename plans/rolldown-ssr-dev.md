@@ -28,15 +28,22 @@ SSR builds don't need HMR, asset pipeline, or Rails manifest — just TSX→JS. 
 | `app/frontend/entrypoints/ssr.tsx` | Replaced `import.meta.glob` with `__ssrComponents` import |
 | `app/frontend/entrypoints/ssr-app.tsx` | Replaced `import.meta.glob` with `__ssrComponentsApp` import |
 | `app/frontend/entrypoints/ssr-demos.tsx` | Replaced `import.meta.glob` with `__ssrComponentsDemos` import |
-| `app/frontend/lib/create_emotion_cache.ts` | Replaced `import.meta.env.SSR` with `typeof document !== 'undefined'` |
+| `app/frontend/lib/create_emotion_cache.ts` | Replaced `import.meta.env.SSR` with `isBrowser()` |
 | `app/frontend/lib/mui_templates/.../CustomizedDataGrid.tsx` | Same pattern |
+| `app/frontend/lib/utils.ts` | **New** — `isBrowser()` utility |
 | `app/frontend/env.d.ts` | Removed `/// <reference types="vite/client" />` |
-| `tsconfig.json` | Removed `"types": ["vite/client"]` |
+| `tsconfig.json` | Removed `"types": ["vite/client"]`, added `["node"]` |
 | `Procfile.dev` | 2 Vite SSR lines → 1 Rolldown line |
-| `bin/dev` | Removed pre-build `npx vite build --ssr` |
+| `bin/dev` | Vite SSR pre-build → Rolldown pre-build |
+| `bin/prod-local` | Vite SSR build → Rolldown build |
+| `Dockerfile` | Vite SSR builds → Rolldown build |
 | `.gitignore` | Added `__ssr_imports__.ts` |
 
-### Verifications
+## Status
+
+This Rolldown integration is a **stepping stone**. The long-term goal is eliminating the external build step entirely — see `../ssr-deno/plans/ssr-source-dev-mode.md` for the next phase (DevBundle: load `.tsx` source directly in Deno V8, no bundler process needed).
+
+Meanwhile, the current setup is functional and verified:
 
 - `npx rolldown -c rolldown.ssr.ts` — all 3 entries build, ~3.5s total
 - `bundle exec rails runner` — Rails boots clean
@@ -44,20 +51,21 @@ SSR builds don't need HMR, asset pipeline, or Rails manifest — just TSX→JS. 
   - `ssr.js` → Dashboard ✅
   - `ssr-app.js` → Dashboard ✅
   - `ssr-demos.js` → mui_hello_world ✅
+- 0 TypeScript errors
 
-### Key findings during implementation
+### Key findings
 
-1. **`import.meta.glob` NOT supported** by Rolldown v1.0.0. Path B: codegen.
-2. **`import.meta.env.SSR` not supported** — replaced with `typeof document !== 'undefined'`.
-3. **`__VITE_SOURCE_DIR__`** — works via `replacePlugin` (not root `define`).
-4. **`platform: 'node'`** needed for Node builtin resolution (`util`, `crypto`, `async_hooks`). `platform: 'neutral'` requires explicit `mainFields`.
-5. **`resolve.conditions` not supported** in Rolldown — removed.
-6. **`format: 'cjs'` required** — ssr-deno wraps bundles in `(function(){...})()`, so `import` statements (ESM) fail. CJS uses `require()` which works inside IIFEs.
-7. **`process.env.NODE_ENV` accessed** by React/readable-stream → replaced at build time via `replacePlugin`. Also replaced `process.browser` and `process.env.READABLE_STREAM`.
-8. **Separate builds per entry** (array config) needed to avoid shared chunks with `import` statements. Single multi-entry build produces shared chunks with cross-file imports.
-9. **`buildStart` plugin hook** runs the codegen before each build. Content-hash dedup prevents infinite watch loops.
+1. **`import.meta.glob` NOT supported** by Rolldown v1.0.0 → codegen script
+2. **`import.meta.env.SSR` not supported** → `isBrowser()` utility
+3. **`__VITE_SOURCE_DIR__`** works via `replacePlugin` (not root `define`)
+4. **`platform: 'node'`** needed for Node builtin resolution
+5. **`resolve.conditions` not supported** in Rolldown
+6. **`format: 'cjs'` required** — ssr-deno wraps bundles in IIFE, ESM `import` fails
+7. **`process.env.*`** replaced at build time via `replacePlugin` (Deno denies env access)
+8. **Separate builds per entry** (array config) to avoid shared chunk `import` statements
+9. **`buildStart` plugin** runs codegen before each build; content-hash dedup prevents watch loops
 
-### Startup time comparison
+### Startup time
 
 | Metric | Vite (before) | Rolldown (after) |
 |--------|---------------|-------------------|
@@ -66,10 +74,6 @@ SSR builds don't need HMR, asset pipeline, or Rails manifest — just TSX→JS. 
 | Incremental rebuild | 500-2000ms | ~200-500ms |
 | Node processes | 3 (dev + 2 SSR) | 2 (dev + 1 SSR) |
 
-Note: rebuild times similar because MUI library is the bottleneck (not the bundler). Real improvement is in startup time and memory.
+## Next: DevBundle (ssr-deno gem)
 
-## Future
-
-- **Production builds:** Extend Rolldown SSR to Dockerfile
-- **Watch optimization:** Exclude component dirs from watch when using codegen (component changes don't need rebuild unless files added/removed)
-- **Gem-level integration:** See `ssr-deno/plans/rolldown-ssr-dev.md`
+The current setup still needs a Procfile entry (`ssr: npx rolldown ...`). The next phase moves SSR loading into the gem itself so `bin/rails s` works standalone. See `../ssr-deno/plans/ssr-source-dev-mode.md`.
