@@ -2,6 +2,8 @@ import { execSync } from 'node:child_process'
 import { defineConfig } from 'rolldown'
 import { replacePlugin } from 'rolldown/plugins'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 const sharedPlugins = [
   {
     name: 'generate-ssr-imports',
@@ -10,8 +12,9 @@ const sharedPlugins = [
     },
   },
   replacePlugin({
+    'import.meta.env.SSR': 'true',
     __VITE_SOURCE_DIR__: JSON.stringify('/app/frontend'),
-    'process.env.NODE_ENV': '"production"',
+    'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
     'process.env.READABLE_STREAM': '""',
     'process.browser': 'false',
   }),
@@ -20,7 +23,8 @@ const sharedPlugins = [
 const sharedOutput = {
   dir: 'dist/server',
   format: 'cjs' as const,
-  sourcemap: true,
+  sourcemap: isDev,
+  minify: !isDev,
 }
 
 export default defineConfig([

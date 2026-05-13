@@ -1,6 +1,11 @@
 declare const __VITE_SOURCE_DIR__: string
 
+interface ImportMetaEnv {
+  readonly SSR: boolean
+}
+
 interface ImportMeta {
+  readonly env: ImportMetaEnv
   glob(pattern: string, options?: { eager?: boolean }): Record<string, any>
 }
 
